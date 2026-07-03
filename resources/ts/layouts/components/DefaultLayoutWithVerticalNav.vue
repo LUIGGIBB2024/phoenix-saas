@@ -12,6 +12,7 @@ import NavBarI18n from '@core/components/I18n.vue'
 import { VerticalNavLayout } from '@layouts'
 
 const CompanyName = localStorage.getItem('company_name')
+const UserName = localStorage.getItem('user_name')
 
 // const company_name = CompanyName // 👈 Cargamos el usuario global
 </script>
@@ -36,7 +37,7 @@ const CompanyName = localStorage.getItem('company_name')
 
         <div class="d-flex align-center gap-2">
           <span class="text-body-2 font-weight-medium text-high-emphasis">
-            {{ CompanyName }}/
+            {{ CompanyName }}/{{ UserName }}
           </span>
         </div>
 
