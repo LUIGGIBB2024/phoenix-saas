@@ -1,0 +1,1 @@
+const s="/build/assets/bootstrap-logo-BV2qEWJG.png",o="/build/assets/figma-logo-B4UDTQ7w.png",a="/build/assets/laravel-logo-Buxrrkp3.png",g="/build/assets/react-logo-CXTZQgT9.png",t="/build/assets/sketch-logo-wzQYvosE.png",l="/build/assets/vuejs-logo-DpDmN9co.png";export{s as b,o as f,a as l,g as r,t as s,l as v};

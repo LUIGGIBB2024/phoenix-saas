@@ -67,6 +67,7 @@ const handleLogin = async () => {
     })
 
     console.log('Login exitoso:', data)
+    console.log('Login exitoso:', data)
 
     const url_token_info = ref('Not Info')
 
