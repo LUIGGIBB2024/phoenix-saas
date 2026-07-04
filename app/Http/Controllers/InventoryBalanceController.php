@@ -25,7 +25,7 @@ class InventoryBalanceController extends Controller
         // $query_barrios    = MiscellaneousItem::select('id', 'code', 'name')->where('miscellaneous_id', 18)->where('companies_id', $companies_id)->orderBy('name')->get();
         // $query_ciudades   = Municipality::select('id', 'code', 'name')->orderBy('name')->get();
 
-        // $query_sgrupos   = MiscellaneousItem::select('code', 'name')->where('miscellaneous_id', 5)->where('companies_id', $companies_id)->orderBy('name')->get();        
+        $query_grupos   = MiscellaneousItem::select('code', 'name')->where('miscellaneous_id', 4)->where('companies_id', $companies_id)->orderBy('name')->get();
         // $query_unidades  = UnitMeasur::select('code', 'name')->orderBy('name')->get();
 
         // $query_regimen      = TypeRegime::select('id', 'name')->get();
@@ -70,7 +70,7 @@ class InventoryBalanceController extends Controller
             'inventory_balances.products_id',
         )
             // Usamos un alias 'm' para solucionar el problema del guion medio y escribir menos código
-            ->selectRaw('TRIM(m.name) as product_name, TRIM(n.name) as group_name, round(inventory_balances.cost*inventory_balances.quantity,2) as subtotal, m.percent')
+            ->selectRaw('TRIM(m.name) as product_name, TRIM(n.name) as group_name, round(inventory_balances.cost*inventory_balances.quantity,2) as subtotal, m.percent, m.group')
             ->leftJoin('products as m', function ($join) {
                 $join->on('m.id', '=', 'inventory_balances.products_id');
             })
@@ -96,9 +96,65 @@ class InventoryBalanceController extends Controller
         $balances = $query;
 
         return response()->json([
-            'data' =>       $balances,
-            'total' =>      $balances->count(),
+            'data'          => $balances,
+            'grupos'        => $query_grupos,
+            'total'         => $balances->count(),
             'totalinventory' =>  $balances->sum('subtotal'),
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        // return response()->json([
+        //     'Dato Request: ' => $request->all(),
+        // ], 201);
+
+        Log::info('ENTRANDO A UPDATE', ['method' => $request->method()]);
+        $companyId  = $request->input('company_id');
+
+        $balance = InventoryBalance::findOrFail($id);
+
+        $data = $request->validate([
+            'quantity'          => 'nullable',
+            'previous_balance'  => 'nullable',
+            'cost'              => 'nullable',
+            'cost00'            => 'nullable',
+            'cost01'            => 'nullable',
+            'cost02'            => 'nullable',
+            'cost03'            => 'nullable',
+            'cost04'            => 'nullable',
+            'cost05'            => 'nullable',
+            'cost06'            => 'nullable',
+            'cost07'            => 'nullable',
+            'cost08'            => 'nullable',
+            'cost09'            => 'nullable',
+            'cost10'            => 'nullable',
+            'cost11'            => 'nullable',
+            'cost12'            => 'nullable',
+        ]);
+
+        //$data['companies_id']       = $companyId;
+
+
+        // Mapeamos los campos que vienen con nombre distinto desde el frontend
+        // $request->merge([
+        //     'group'           => $request->input('namegroupselected'),
+        //     'subgroup'        => $request->input('namesgroupselected'),
+        //     'unit_of_measure' => $request->input('namemeasureselected'),
+        // ]);
+
+        try {
+            $balance->update($data);
+
+            return response()->json([
+                'message' => 'Registro Actualizado exitosamente',
+                'products' => $balance,
+            ], 201);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'message' => 'El servidor tardó demasiado en responder.',
+                'error' => $e->getMessage()
+            ], 408);
+        }
     }
 }

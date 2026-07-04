@@ -17,6 +17,7 @@ const isFocused = ref(false)
 // const certificateNombre = ref('')
 const certificateFile = ref<File | null>(null)
 const certificateFileModel = ref<File | File[] | null>(null)
+const codegroup = ref('')
 
 const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -26,6 +27,7 @@ function onFileChange(e: Event) {
     archivos.value = Array.from(target.files)
 }
 const tipodeusuario = localStorage.getItem('tipo_de_usuario')
+const process_year = ref(localStorage.getItem('process_year'))
 
 // 🔹 Filtros y variables de estado
 const searchQuery = ref('')
@@ -67,7 +69,21 @@ export interface InventoryBalance {
   code: string
   store: string
   batch: string
+  group: string
   cost: number
+  cost00: number
+  cost01: number
+  cost02: number
+  cost03: number
+  cost04: number
+  cost05: number
+  cost06: number
+  cost07: number
+  cost08: number
+  cost09: number
+  cost10: number
+  cost11: number
+  cost12: number
   lastcost: number
   quantity: number
   quantity1: number
@@ -99,7 +115,21 @@ const newRecord = ref<InventoryBalance>({
   code: '',
   store: '',
   batch: '',
+  group: '',
   cost: 0,
+  cost00: 0,
+  cost01: 0,
+  cost02: 0,
+  cost03: 0,
+  cost04: 0,
+  cost05: 0,
+  cost06: 0,
+  cost07: 0,
+  cost08: 0,
+  cost09: 0,
+  cost10: 0,
+  cost11: 0,
+  cost12: 0,
   lastcost: 0,
   quantity: 0,
   quantity1: 0,
@@ -153,9 +183,24 @@ watch(showDialog, isOpen => {
       id: 0,
       year: '',
       code: '',
+      name: '',
       store: '',
       batch: '',
+      group: '',
       cost: 0,
+      cost00: 0,
+      cost01: 0,
+      cost02: 0,
+      cost03: 0,
+      cost04: 0,
+      cost05: 0,
+      cost06: 0,
+      cost07: 0,
+      cost08: 0,
+      cost09: 0,
+      cost10: 0,
+      cost11: 0,
+      cost12: 0,
       lastcost: 0,
       quantity: 0,
       quantity1: 0,
@@ -184,11 +229,12 @@ const loadInfo = async () => {
 
     totalinventory.value = response.data.totalinventory
 
-    // grupos.value = response.data.grupos
+    grupos.value = response.data.grupos
+
     // sgrupos.value = response.data.sgrupos
     // unidades.value = response.data.unidades
 
-    console.log('Soy Datos:', responseData.value)
+    // console.log('Soy Grupos :', grupos.value)
   }
   catch (error) {
     console.error('Error al intentar enviar correo :', error)
@@ -245,8 +291,8 @@ const saveRecord = async () => {
 
   try {
     const url = newRecord.value.id
-      ? `/api/products/${newRecord.value.id}`
-      : '/api/products'
+      ? `/api/balances/${newRecord.value.id}`
+      : '/api/balances'
 
     const { data } = await axios.post(url, formData)
 
@@ -255,27 +301,13 @@ const saveRecord = async () => {
 
     // 🔎 Buscamos los nombres correspondientes a los códigos seleccionados
     const grupoSeleccionado = grupos.value.find(
-      g => String(g.code).trim() === String(newRecord.value.namegroupselected).trim(),
+      g => String(g.code).trim() === String(newRecord.value.group).trim(),
     )
-
-    const sgrupoSeleccionado = sgrupos.value.find(
-      s => String(s.code).trim() === String(newRecord.value.namesgroupselected).trim(),
-    )
-
-    const unidadSeleccionada = unidades.value.find(
-      u => String(u.code).trim() === String(newRecord.value.namemeasureselected).trim(),
-    )
-
-    // 🔍 2 y 3. Confirmar selección del VSelect de unidad
-    console.log('2. newRecord.namemeasureselected:', newRecord.value.namemeasureselected)
-    console.log('3. unidadSeleccionada encontrada:', unidadSeleccionada)
 
     // 🧩 Mergeamos el producto crudo del backend con los nombres frescos
     const productoActualizado = {
       ...data.products,
       group_name: grupoSeleccionado?.name ?? null,
-      sgroup_name: sgrupoSeleccionado?.name ?? null,
-      measure_name: unidadSeleccionada?.name ?? null,
     }
 
     // 🔍 4 y 5. Confirmar el objeto final antes de asignarlo
@@ -340,16 +372,31 @@ const openEditDialog = _infoData => {
     id: _infoData.id,
     year: _infoData.year,
     code: _infoData.code,
+    name: _infoData.product_name, // 👈 Asegúrate de que el backend envíe este campo
     store: _infoData.store,
     batch: _infoData.batch,
+    group: _infoData.group,
     cost: _infoData.cost,
+    cost00: _infoData.cost00,
+    cost01: _infoData.cost01,
+    cost02: _infoData.cost02,
+    cost03: _infoData.cost03,
+    cost04: _infoData.cost04,
+    cost05: _infoData.cost05,
+    cost06: _infoData.cost06,
+    cost07: _infoData.cost07,
+    cost08: _infoData.cost08,
+    cost09: _infoData.cost09,
+    cost10: _infoData.cost10,
+    cost11: _infoData.cost11,
+    cost12: _infoData.cost12,
     lastcost: _infoData.lastcost,
     quantity: _infoData.quantity,
     quantity1: _infoData.quantity1,
     companies_id: _infoData.companies_id,
     products_id: _infoData.products_id,
   }
-
+  codegroup.value = _infoData.codegroup
   showDialog.value = true
 }
 
@@ -363,9 +410,24 @@ const openCreateDialog = () => {
     id: null,
     year: '',
     code: '',
+    name: '', // 👈 Asegúrate de inicializar el nombre también
     store: '',
     batch: '',
+    group: '',
     cost: 0,
+    cost00: 0,
+    cost01: 0,
+    cost02: 0,
+    cost03: 0,
+    cost04: 0,
+    cost05: 0,
+    cost06: 0,
+    cost07: 0,
+    cost08: 0,
+    cost09: 0,
+    cost10: 0,
+    cost11: 0,
+    cost12: 0,
     lastcost: 0,
     quantity: 0,
     quantity1: 0,
@@ -456,7 +518,7 @@ const totalinventory = computed(() => {
   }, 0)
 })
 
-console.log('Soy Total Inventarios: ', totalinventory.value)
+// console.log('Soy Total Inventarios: ', totalinventory.value)
 
 //   const file = Array.isArray(certificateFileModel.value)
 //     ? certificateFileModel.value[0]
@@ -509,18 +571,23 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
 
   return { formattedValue, onlyNumbersAndDot, isFocused }
 }// Instancias la función para cada campo de tu formulario
-const taxField = useNumericField(newRecord, 'consumption_tax')
-const renField = useNumericField(newRecord, 'profitability')
-const stckminField = useNumericField(newRecord, 'minimum_stocky')
-const stckmaxField = useNumericField(newRecord, 'maximum_stock')
-const ivaField = useNumericField(newRecord, 'percent')
-
 // const totalField = useNumericField(newRecord, 'total_amount')
-const saleslField = useNumericField(newRecord, 'sale_value')
 const costField = useNumericField(newRecord, 'cost')
-const factField = useNumericField(newRecord, 'conversion_factor')
-const weightField = useNumericField(newRecord, 'weight_volume')
-const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
+const quantityField = useNumericField(newRecord, 'quantity')
+const cost00Field = useNumericField(newRecord, 'cost00')
+const cost01Field = useNumericField(newRecord, 'cost01')
+const cost02Field = useNumericField(newRecord, 'cost02')
+const cost03Field = useNumericField(newRecord, 'cost03')
+const cost04Field = useNumericField(newRecord, 'cost04')
+const cost05Field = useNumericField(newRecord, 'cost05')
+const cost06Field = useNumericField(newRecord, 'cost06')
+const cost07Field = useNumericField(newRecord, 'cost07')
+const cost08Field = useNumericField(newRecord, 'cost08')
+const cost09Field = useNumericField(newRecord, 'cost09')
+const cost10Field = useNumericField(newRecord, 'cost10')
+const cost11Field = useNumericField(newRecord, 'cost11')
+const cost12Field = useNumericField(newRecord, 'cost12')
+const previousField = useNumericField(newRecord, 'previous_balance')
 </script>
 
 <template>
@@ -534,6 +601,9 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
       >
         <h4 class="text-primary mb-2">
           Saldos de Inventarios
+          <span>
+            :(<strong class="text-success">{{ process_year }}</strong>)
+          </span>
         </h4>
         <VCardText class="d-flex align-center flex-wrap gap-4 pa-0">
           <VTextField
@@ -763,19 +833,19 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
   >
     <VCard>
       <!-- <VCardTitle class="text-h5 bg-primary text-white py-4 px-4">Agregar nueva empresa</VCardTitle> -->
-      <VCardTitle class="modal-title d-flex align-center text-h5">
+      <VCardTitle class="modal-title d-flex align-center text-h6">
         <VIcon
           icon="tabler-building"
           size="28"
           color="white"
           class="me-3"
         />
-        {{ newRecord.id ? 'Actualizando un Producto' : 'Agregando un Producto' }}
+        {{ newRecord.id ? 'Actualizando Saldos' : 'Agregando Saldo' }}
         <span
-          class="text-h5 font-weight-bold ml-2"
+          class="text-h6 font-weight-bold ml-2"
           style="color: #f7fb2d !important;"
         >
-          ID: {{ String(newRecord.id || 0).padStart(8, '0') }}
+          ID: {{ String(newRecord.id || 0).padStart(8, '0') }} / {{ newRecord.name }}
         </span>
       </VCardTitle>
 
@@ -802,6 +872,7 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
                 class="mb-3 text_size mt-0"
                 :rules="[rules.required]"
                 placeholder="Ingrese Código del Producto"
+                readonly
                 @update:model-value="val => newRecord.code = val.toUpperCase()"
               >
                 <template #prepend-inner>
@@ -826,6 +897,7 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
                 class="mb-3 text_size"
                 :rules="[rules.required]"
                 placeholder="Ingrese Descripción del Producto"
+                readonly
                 @update:model-value="val => newRecord.name = val.toUpperCase()"
               >
                 <template #prepend-inner>
@@ -850,16 +922,18 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
               class="py-0"
             >
               <AppTextField
-                v-model="newRecord.codereference"
-                label="Código de Referencia"
+                v-model="quantityField.formattedValue.value"
+                label="Cantidad Actual"
                 class="mb-3 text_size"
                 :rules="[rules.required]"
-                placeholder="Ingrese Código de Referencia"
-                @update:model-value="val => newRecord.codereference = val.toUpperCase()"
+                placeholder="Ingrese Cantidad Actual"
+                @keypress="quantityField.onlyNumbersAndDot"
+                @focus="quantityField.isFocused.value = true"
+                @blur="quantityField.isFocused.value = false"
               >
                 <template #prepend-inner>
                   <VIcon
-                    icon="tabler-qrcode"
+                    icon="tabler-calculator"
                     color="primary"
                     size="22"
                     class="me-2"
@@ -873,16 +947,17 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
               class="py-0"
             >
               <AppTextField
-                v-model="newRecord.presentation"
-                label="Presentación"
+                v-model="costField.formattedValue.value"
+                label="Costo Promedio"
                 class="mb-3 text_size"
-                :rules="[rules.required]"
-                placeholder="Ingrese Presentación"
-                @update:model-value="val => newRecord.presentation = val.toUpperCase()"
+                placeholder="Ingrese Costo Promedio"
+                @keypress="costField.onlyNumbersAndDot"
+                @focus="costField.isFocused.value = true"
+                @blur="costField.isFocused.value = false"
               >
                 <template #prepend-inner>
                   <VIcon
-                    icon="tabler-brand-codepen"
+                    icon="tabler-basket-dollar"
                     color="primary"
                     size="22"
                     class="me-2"
@@ -896,17 +971,17 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
               class="py-0"
             >
               <AppTextField
-                v-model="ivaField.formattedValue.value"
-                label="Iva (%)"
+                v-model="previousField.formattedValue.value"
+                label="Cantidad Inicial"
                 class="mb-3 text_size"
-                placeholder="Ingrese Porcentaje de Iva"
-                @keypress="ivaField.onlyNumbersAndDot"
-                @focus="ivaField.isFocused.value = true"
-                @blur="ivaField.isFocused.value = false"
+                placeholder="Ingrese Cantidad Inicial"
+                @keypress="previousField.onlyNumbersAndDot"
+                @focus="previousField.isFocused.value = true"
+                @blur="previousField.isFocused.value = false"
               >
                 <template #prepend-inner>
                   <VIcon
-                    icon="tabler-receipt-tax"
+                    icon="tabler-calculator"
                     color="primary"
                     size="22"
                     class="me-2"
@@ -920,17 +995,17 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
               class="py-0"
             >
               <AppTextField
-                v-model="unitxpackField.formattedValue.value"
-                label="Unidades por Empaque"
+                v-model="cost00Field.formattedValue.value"
+                label="Costo Inicial"
                 class="mb-3 text_size"
-                placeholder="Ingrese Unidades por Empaque"
-                @keypress="unitxpackField.onlyNumbersAndDot"
-                @focus="unitxpackField.isFocused.value = true"
-                @blur="unitxpackField.isFocused.value = false"
+                placeholder="Ingrese Costo Inicial"
+                @keypress="cost00Field.onlyNumbersAndDot"
+                @focus="cost00Field.isFocused.value = true"
+                @blur="cost00Field.isFocused.value = false"
               >
                 <template #prepend-inner>
                   <VIcon
-                    icon="tabler-packages"
+                    icon="tabler-basket-dollar"
                     color="primary"
                     size="22"
                     class="me-2"
@@ -951,17 +1026,17 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
             class="py-0"
           >
             <AppTextField
-              v-model="weightField.formattedValue.value"
-              label="Peso / Volumen"
+              v-model="cost01Field.formattedValue.value"
+              label="Costo de Enero"
               class="mb-3 text_size"
-              placeholder="Ingrese Peso / Volumen"
-              @keypress="weightField.onlyNumbersAndDot"
-              @focus="weightField.isFocused.value = true"
-              @blur="weightField.isFocused.value = false"
+              placeholder="Ingrese Costo de Enero"
+              @keypress="cost01Field.onlyNumbersAndDot"
+              @focus="cost01Field.isFocused.value = true"
+              @blur="cost01Field.isFocused.value = false"
             >
               <template #prepend-inner>
                 <VIcon
-                  icon="tabler-vector-bezier"
+                  icon="tabler-basket-dollar"
                   color="primary"
                   size="22"
                   class="me-2"
@@ -975,17 +1050,17 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
             class="py-0"
           >
             <AppTextField
-              v-model="factField.formattedValue.value"
-              label="Factor de Conversión"
+              v-model="cost02Field.formattedValue.value"
+              label="Costo de Febrero"
               class="mb-3 text_size"
-              placeholder="Ingrese Factor de Conversión"
-              @keypress="factField.onlyNumbersAndDot"
-              @focus="factField.isFocused.value = true"
-              @blur="factField.isFocused.value = false"
+              placeholder="Ingrese Costo Febrero"
+              @keypress="cost02Field.onlyNumbersAndDot"
+              @focus="cost02Field.isFocused.value = true"
+              @blur="cost02Field.isFocused.value = false"
             >
               <template #prepend-inner>
                 <VIcon
-                  icon="tabler-transform"
+                  icon="tabler-basket-dollar"
                   color="primary"
                   size="22"
                   class="me-2"
@@ -999,17 +1074,17 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
             class="py-0"
           >
             <AppTextField
-              v-model="stckminField.formattedValue.value"
-              label="Stock Mínimo"
+              v-model="cost03Field.formattedValue.value"
+              label="Costo de Marzo"
               class="mb-3 text_size"
-              placeholder="Ingrese Stock Máximo"
-              @keypress="stckminField.onlyNumbersAndDot"
-              @focus="stckminField.isFocused.value = true"
-              @blur="stckminField.isFocused.value = false"
+              placeholder="Ingrese Costo de Marzo"
+              @keypress="cost03Field.onlyNumbersAndDot"
+              @focus="cost03Field.isFocused.value = true"
+              @blur="cost03Field.isFocused.value = false"
             >
               <template #prepend-inner>
                 <VIcon
-                  icon="tabler-calculator"
+                  icon="tabler-basket-dollar"
                   color="primary"
                   size="22"
                   class="me-2"
@@ -1023,115 +1098,13 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
             class="py-0"
           >
             <AppTextField
-              v-model="stckmaxField.formattedValue.value"
-              label="Stock Máximo"
+              v-model="cost04Field.formattedValue.value"
+              label="Costo de Abril"
               class="mb-3 text_size"
-              placeholder="Ingrese Stock Máximo"
-              @keypress="stckmaxField.onlyNumbersAndDot"
-              @focus="stckmaxField.isFocused.value = true"
-              @blur="stckmaxField.isFocused.value = false"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-calculator"
-                  color="primary"
-                  size="22"
-                  class="me-2"
-                />
-              </template>
-            </AppTextField>
-          </VCol>
-        </VRow>
-        <VRow
-          dense
-          align="center"
-          class="g-2"
-        >
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <AppTextField
-              v-model="renField.formattedValue.value"
-              label="(%) Rentabilidad"
-              class="mb-3 text_size"
-              placeholder="Ingrese Factor Rentabilidad"
-              @keypress="renField.onlyNumbersAndDot"
-              @focus="renField.isFocused.value = true"
-              @blur="renField.isFocused.value = false"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-free-rights"
-                  color="primary"
-                  size="22"
-                  class="me-2"
-                />
-              </template>
-            </AppTextField>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <AppTextField
-              v-model="taxField.formattedValue.value"
-              label="Impoconsumo"
-              class="mb-3 text_size"
-              placeholder="Ingrese Impoconsumo"
-              @keypress="taxField.onlyNumbersAndDot"
-              @focus="taxField.isFocused.value = true"
-              @blur="taxField.isFocused.value = false"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-license"
-                  color="primary"
-                  size="22"
-                  class="me-2"
-                />
-              </template>
-            </AppTextField>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <AppTextField
-              v-model="saleslField.formattedValue.value"
-              label="($) Valor de Venta"
-              class="mb-3 text_size"
-              placeholder="Ingrese Valor de Venta"
-              @keypress="saleslField.onlyNumbersAndDot"
-              @focus="saleslField.isFocused.value = true"
-              @blur="saleslField.isFocused.value = false"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-free-rights"
-                  color="primary"
-                  size="22"
-                  class="me-2"
-                />
-              </template>
-            </AppTextField>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <AppTextField
-              v-model="costField.formattedValue.value"
-              label="Costo Promedio"
-              class="mb-3 text_size"
-              placeholder="Ingrese Costo Promedio"
-              @keypress="costField.onlyNumbersAndDot"
-              @focus="costField.isFocused.value = true"
-              @blur="costField.isFocused.value = false"
+              placeholder="Ingrese Costo de Abril"
+              @keypress="cost04Field.onlyNumbersAndDot"
+              @focus="cost04Field.isFocused.value = true"
+              @blur="cost04Field.isFocused.value = false"
             >
               <template #prepend-inner>
                 <VIcon
@@ -1151,181 +1124,21 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
         >
           <VCol
             cols="12"
-            md="6"
-            class="py-0"
-          >
-            <VSelect
-              v-model="newRecord.namegroupselected"
-              :items="grupos"
-              item-title="name"
-              item-value="code"
-              label="Grupo de Producto:"
-              :rules="[rules.required]"
-              class="mb-3"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-chart-cohort"
-                  color="primary"
-                  size="22"
-                  class="me-3"
-                />
-              </template>
-            </VSelect>
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-            class="py-0"
-          >
-            <VSelect
-              v-model="newRecord.namesgroupselected"
-              :items="sgrupos"
-              item-title="name"
-              item-value="code"
-              label="Sub Grupo de Producto:"
-              :rules="[rules.required]"
-              class="mb-3"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-chart-cohort"
-                  color="primary"
-                  size="22"
-                  class="me-3"
-                />
-              </template>
-            </VSelect>
-          </VCol>
-        </VRow>
-        <VRow
-          dense
-          align="center"
-          class="g-2"
-        >
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <VSelect
-              v-model="newRecord.namemeasureselected"
-              :items="unidades"
-              item-title="name"
-              item-value="code"
-              label="Unidad de Medida:"
-              class="mb-3"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-ruler-measure"
-                  color="primary"
-                  size="22"
-                  class="me-3"
-                />
-              </template>
-            </VSelect>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <VSelect
-              v-model="newRecord.control_id"
-              :items="[
-                { id: 'inventario', name: 'Inventario' },
-                { id: 'servicio', name: 'Servicio' }]"
-              item-title="name"
-              item-value="id"
-              label="Tipo de Control:"
-              :rules="[rules.required]"
-              class="mb-3"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-settings-search"
-                  color="primary"
-                  size="22"
-                  class="me-3"
-                />
-              </template>
-            </VSelect>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <VSelect
-              v-model="newRecord.billable"
-              :items="[
-                { id: 'si', name: 'Si' },
-                { id: 'no', name: 'No' }]"
-              item-title="name"
-              item-value="id"
-              label="Producto Facturable:"
-              class="mb-3"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-ruler-measure"
-                  color="primary"
-                  size="22"
-                  class="me-3"
-                />
-              </template>
-            </VSelect>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-            class="py-0"
-          >
-            <VSelect
-              v-model="newRecord.state"
-              :items="[
-                { id: 'activo', name: 'Activo' },
-                { id: 'inactivo', name: 'Inactivo' }]"
-              item-title="name"
-              item-value="id"
-              label="Estado:"
-              :rules="[rules.required]"
-              class="mb-3"
-            >
-              <template #prepend-inner>
-                <VIcon
-                  icon="tabler-settings-search"
-                  color="primary"
-                  size="22"
-                  class="me-3"
-                />
-              </template>
-            </VSelect>
-          </VCol>
-        </VRow>
-        <VRow
-          dense
-          align="center"
-          class="g-2"
-        >
-          <VCol
-            cols="12"
             md="3"
             class="py-0"
           >
             <AppTextField
-              v-model="newRecord.location"
-              label="Ubicación (Estantes)"
+              v-model="cost05Field.formattedValue.value"
+              label="Costo Mayo"
               class="mb-3 text_size"
-              required
-              :rules="[rules.required]"
-              placeholder="Ingrese Ubicación del Producto"
-              @update:model-value="val => newRecord.location = val.toUpperCase()"
+              placeholder="Ingrese Costo Mayo"
+              @keypress="cost05Field.onlyNumbersAndDot"
+              @focus="cost05Field.isFocused.value = true"
+              @blur="cost05Field.isFocused.value = false"
             >
               <template #prepend-inner>
                 <VIcon
-                  icon="tabler-map-pin"
+                  icon="tabler-basket-dollar"
                   color="primary"
                   size="22"
                   class="me-2"
@@ -1339,17 +1152,167 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
             class="py-0"
           >
             <AppTextField
-              v-model="newRecord.namephoto"
-              label="Nombre de la Foto (Imagen)"
+              v-model="cost06Field.formattedValue.value"
+              label="Costo de Junio"
               class="mb-3 text_size"
-              required
-              :rules="[rules.required]"
-              placeholder="Ingrese Nombre Imagen"
-              @update:model-value="val => newRecord.namephoto = val.toUpperCase()"
+              placeholder="Ingrese Costo Junio"
+              @keypress="cost06Field.onlyNumbersAndDot"
+              @focus="cost06Field.isFocused.value = true"
+              @blur="cost06Field.isFocused.value = false"
             >
               <template #prepend-inner>
                 <VIcon
-                  icon="tabler-photo-bitcoin"
+                  icon="tabler-basket-dollar"
+                  color="primary"
+                  size="22"
+                  class="me-2"
+                />
+              </template>
+            </AppTextField>
+          </VCol>
+          <VCol
+            cols="12"
+            md="3"
+            class="py-0"
+          >
+            <AppTextField
+              v-model="cost07Field.formattedValue.value"
+              label="Costo de Julio"
+              class="mb-3 text_size"
+              placeholder="Ingrese Costo Julio"
+              @keypress="cost07Field.onlyNumbersAndDot"
+              @focus="cost07Field.isFocused.value = true"
+              @blur="cost07Field.isFocused.value = false"
+            >
+              <template #prepend-inner>
+                <VIcon
+                  icon="tabler-basket-dollar"
+                  color="primary"
+                  size="22"
+                  class="me-2"
+                />
+              </template>
+            </AppTextField>
+          </VCol>
+          <VCol
+            cols="12"
+            md="3"
+            class="py-0"
+          >
+            <AppTextField
+              v-model="cost08Field.formattedValue.value"
+              label="Costo de Agosto"
+              class="mb-3 text_size"
+              placeholder="Ingrese Costo Agosto"
+              @keypress="cost08Field.onlyNumbersAndDot"
+              @focus="cost08Field.isFocused.value = true"
+              @blur="cost08Field.isFocused.value = false"
+            >
+              <template #prepend-inner>
+                <VIcon
+                  icon="tabler-basket-dollar"
+                  color="primary"
+                  size="22"
+                  class="me-2"
+                />
+              </template>
+            </AppTextField>
+          </VCol>
+        </VRow>
+        <VRow
+          dense
+          align="center"
+          class="g-2"
+        >
+          <VCol
+            cols="12"
+            md="3"
+            class="py-0"
+          >
+            <AppTextField
+              v-model="cost09Field.formattedValue.value"
+              label="Costo de Septiembre"
+              class="mb-3 text_size"
+              placeholder="Ingrese Costo Septiembre"
+              @keypress="cost09Field.onlyNumbersAndDot"
+              @focus="cost09Field.isFocused.value = true"
+              @blur="cost09Field.isFocused.value = false"
+            >
+              <template #prepend-inner>
+                <VIcon
+                  icon="tabler-basket-dollar"
+                  color="primary"
+                  size="22"
+                  class="me-2"
+                />
+              </template>
+            </AppTextField>
+          </VCol>
+          <VCol
+            cols="12"
+            md="3"
+            class="py-0"
+          >
+            <AppTextField
+              v-model="cost10Field.formattedValue.value"
+              label="Costo de Octubre"
+              class="mb-3 text_size"
+              placeholder="Ingrese Costo Octubre"
+              @keypress="cost10Field.onlyNumbersAndDot"
+              @focus="cost10Field.isFocused.value = true"
+              @blur="cost10Field.isFocused.value = false"
+            >
+              <template #prepend-inner>
+                <VIcon
+                  icon="tabler-basket-dollar"
+                  color="primary"
+                  size="22"
+                  class="me-2"
+                />
+              </template>
+            </AppTextField>
+          </VCol>
+          <VCol
+            cols="12"
+            md="3"
+            class="py-0"
+          >
+            <AppTextField
+              v-model="cost11Field.formattedValue.value"
+              label="Costo de Noviembre"
+              class="mb-3 text_size"
+              placeholder="Ingrese Costo Noviembre"
+              @keypress="cost11Field.onlyNumbersAndDot"
+              @focus="cost11Field.isFocused.value = true"
+              @blur="cost11Field.isFocused.value = false"
+            >
+              <template #prepend-inner>
+                <VIcon
+                  icon="tabler-basket-dollar"
+                  color="primary"
+                  size="22"
+                  class="me-2"
+                />
+              </template>
+            </AppTextField>
+          </VCol>
+          <VCol
+            cols="12"
+            md="3"
+            class="py-0"
+          >
+            <AppTextField
+              v-model="cost12Field.formattedValue.value"
+              label="Costo de Diciembre"
+              class="mb-3 text_size"
+              placeholder="Ingrese Costo Diciembre"
+              @keypress="cost12Field.onlyNumbersAndDot"
+              @focus="cost12Field.isFocused.value = true"
+              @blur="cost12Field.isFocused.value = false"
+            >
+              <template #prepend-inner>
+                <VIcon
+                  icon="tabler-basket-dollar"
                   color="primary"
                   size="22"
                   class="me-2"

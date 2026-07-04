@@ -441,7 +441,7 @@ const openEditDialog = _infoData => {
     sale_value: _infoData.sale_value,
     cost: _infoData.cost,
     location: _infoData.location,
-    control_id: toId(_infoData.control_id),
+    control_id: _infoData.control_id,
     typeofproduct: _infoData.typeofproduct,
     require_scale: _infoData.require_scale,
     billable: _infoData.billable,
@@ -473,7 +473,7 @@ const openEditDialog = _infoData => {
   }
 
   // ✅ Verificar que el valor llega
-  // console.log('certificatename:', newProduct.value.certificatename)
+  console.log('Soy Registr Edit:', newRecord.value)
 
   showDialog.value = true
 }
