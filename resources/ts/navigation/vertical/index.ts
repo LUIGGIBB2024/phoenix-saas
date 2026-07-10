@@ -62,7 +62,7 @@ const menu_phx: NavItem_Saas[] = [
       { title: 'Productos', to: { name: 'products' }, icon: { icon: 'tabler-clipboard-text', size: 18 }, roles: ['admin', 'operador'] },
       { title: 'Saldos de Inventarios', to: { name: 'balances' }, icon: { icon: 'tabler-load-balancer', size: 18 }, roles: ['admin'] },
       { title: 'Clientes', to: { name: 'customers' }, icon: { icon: 'tabler-brand-notion', size: 18 }, roles: ['admin'] },
-      { title: 'Proveedores', to: { name: 'documentosdian-payroll' }, icon: { icon: 'tabler-user-circle', size: 18 }, roles: ['admin'] },
+      { title: 'Proveedores', to: { name: 'suppliers' }, icon: { icon: 'tabler-building-factory-2', size: 18 }, roles: ['admin'] },
       { title: 'Documento Soporte', to: { name: 'documentosdian-support' }, icon: { icon: 'tabler-file-invoice', size: 18 }, roles: ['admin'] },
       { title: 'Facturación', to: { name: 'facturas' }, icon: { icon: 'tabler-file-invoice', size: 18 }, roles: ['admin'] },
     ],
@@ -105,7 +105,7 @@ const menu_super: NavItem_Saas[] = [
       { title: 'Productos', to: { name: 'products' }, icon: { icon: 'tabler-clipboard-text', size: 18 }, roles: ['admin', 'operador'] },
       { title: 'Saldos de Inventarios', to: { name: 'balances' }, icon: { icon: 'tabler-load-balancer', size: 18 }, roles: ['admin'] },
       { title: 'Clientes', to: { name: 'customers' }, icon: { icon: 'tabler-brand-notion', size: 18 }, roles: ['admin'] },
-      { title: 'Proveedores', icon: { icon: 'tabler-user-circle', size: 18 }, roles: ['admin'] },
+      { title: 'Proveedores', to: { name: 'suppliers' }, icon: { icon: 'tabler-building-factory-2', size: 18 }, roles: ['admin'] },
 
     ],
   },
@@ -119,7 +119,7 @@ const menu_super: NavItem_Saas[] = [
       { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', icon: { icon: 'tabler-cash', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Egresos', icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Compras', icon: { icon: 'tabler-file-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+      { title: 'Movto de Inventarios', to: { name: 'inventories' }, icon: { icon: 'tabler-basket-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
 
     ],
   },
@@ -164,7 +164,7 @@ const menu_ope: NavItem_Saas[] = [
       { title: 'Productos', to: { name: 'products' }, icon: { icon: 'tabler-clipboard-text', size: 18 }, roles: ['admin', 'operador'] },
       { title: 'Saldos de Inventarios', to: { name: 'balances' }, icon: { icon: 'tabler-load-balancer', size: 18 }, roles: ['admin'] },
       { title: 'Clientes', to: { name: 'customers' }, icon: { icon: 'tabler-brand-notion', size: 18 }, roles: ['admin'] },
-      { title: 'Proveedores', icon: { icon: 'tabler-user-circle', size: 18 }, roles: ['admin'] },
+      { title: 'Proveedores', to: { name: 'suppliers' }, icon: { icon: 'tabler-brand-notion', size: 18 }, roles: ['admin'] },
 
     ],
   },
@@ -178,7 +178,7 @@ const menu_ope: NavItem_Saas[] = [
       { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', icon: { icon: 'tabler-cash', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Egresos', icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Compras', icon: { icon: 'tabler-file-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+      { title: 'Movto de Inventarios', to: { name: 'inventories' }, icon: { icon: 'tabler-basket-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
 
     ],
   },

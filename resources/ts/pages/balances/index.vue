@@ -67,6 +67,7 @@ export interface InventoryBalance {
   id?: number
   year: string
   code: string
+  name: string
   store: string
   batch: string
   group: string
@@ -113,6 +114,7 @@ const newRecord = ref<InventoryBalance>({
   id: 0,
   year: '',
   code: '',
+  name: '',
   store: '',
   batch: '',
   group: '',
@@ -308,6 +310,8 @@ const saveRecord = async () => {
     const productoActualizado = {
       ...data.products,
       group_name: grupoSeleccionado?.name ?? null,
+      product_name: newRecord.value.name ?? null,
+      subtotal: newRecord.value.quantity * newRecord.value.cost,
     }
 
     // 🔍 4 y 5. Confirmar el objeto final antes de asignarlo
@@ -630,21 +634,23 @@ const previousField = useNumericField(newRecord, 'previous_balance')
         md="2"
         class="d-flex align-right justify-start mt-md-5 mt-2"
       >
-        <VBtn
+        <!--
+          <VBtn
           rounded="pill"
           color="primary"
           variant="flat"
           block
           @click="openCreateDialog"
-        >
+          >
           <template #prepend>
-            <VIcon
-              icon="tabler-plus"
-              size="20"
-            />
+          <VIcon
+          icon="tabler-plus"
+          size="20"
+          />
           </template>
           Ingresar Saldos
-        </VBtn>
+          </VBtn>
+        -->
       </VCol>
     </VRow>
   </VCard>
@@ -927,6 +933,7 @@ const previousField = useNumericField(newRecord, 'previous_balance')
                 class="mb-3 text_size"
                 :rules="[rules.required]"
                 placeholder="Ingrese Cantidad Actual"
+                :disabled="tipodeusuario === 'Operador'"
                 @keypress="quantityField.onlyNumbersAndDot"
                 @focus="quantityField.isFocused.value = true"
                 @blur="quantityField.isFocused.value = false"
@@ -951,6 +958,7 @@ const previousField = useNumericField(newRecord, 'previous_balance')
                 label="Costo Promedio"
                 class="mb-3 text_size"
                 placeholder="Ingrese Costo Promedio"
+                :disabled="tipodeusuario === 'Operador'"
                 @keypress="costField.onlyNumbersAndDot"
                 @focus="costField.isFocused.value = true"
                 @blur="costField.isFocused.value = false"
@@ -975,6 +983,7 @@ const previousField = useNumericField(newRecord, 'previous_balance')
                 label="Cantidad Inicial"
                 class="mb-3 text_size"
                 placeholder="Ingrese Cantidad Inicial"
+                :disabled="tipodeusuario === 'Operador'"
                 @keypress="previousField.onlyNumbersAndDot"
                 @focus="previousField.isFocused.value = true"
                 @blur="previousField.isFocused.value = false"
@@ -999,6 +1008,7 @@ const previousField = useNumericField(newRecord, 'previous_balance')
                 label="Costo Inicial"
                 class="mb-3 text_size"
                 placeholder="Ingrese Costo Inicial"
+                :disabled="tipodeusuario === 'Operador'"
                 @keypress="cost00Field.onlyNumbersAndDot"
                 @focus="cost00Field.isFocused.value = true"
                 @blur="cost00Field.isFocused.value = false"

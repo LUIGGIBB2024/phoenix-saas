@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('nit', 20)->nullable();
             $table->string('branch', 20)->nullable();
+            $table->string('dv', 1)->nullable();
             $table->string('patient_id', 20)->nullable();
             $table->string('code', 20)->nullable();
             $table->string('name', 255)->nullable();

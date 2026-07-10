@@ -352,6 +352,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'inventories': RouteRecordInfo<
+      'inventories',
+      '/Inventories',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'login': RouteRecordInfo<
       'login',
       '/login',
@@ -383,6 +390,13 @@ declare module 'vue-router/auto-routes' {
     'second-page': RouteRecordInfo<
       'second-page',
       '/second-page',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'suppliers': RouteRecordInfo<
+      'suppliers',
+      '/suppliers',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -696,6 +710,12 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'resources/ts/pages/Inventories/index.vue': {
+      routes:
+        | 'inventories'
+      views:
+        | never
+    }
     'resources/ts/pages/login.vue': {
       routes:
         | 'login'
@@ -723,6 +743,12 @@ declare module 'vue-router/auto-routes' {
     'resources/ts/pages/second-page.vue': {
       routes:
         | 'second-page'
+      views:
+        | never
+    }
+    'resources/ts/pages/suppliers/index.vue': {
+      routes:
+        | 'suppliers'
       views:
         | never
     }

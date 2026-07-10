@@ -33,6 +33,7 @@ const responseData = ref({
 
 const products = ref([])
 const customers = ref([])
+const paymentmethods = ref([])
 
 // Los campos numéricos llegan como string desde el backend (price, quantity, etc.)
 function aNumero(valor: string | number | null | undefined): number {
@@ -59,6 +60,18 @@ interface ListaPrecio {
   id: ClavePrecio
   nombre: string
 }
+
+interface Method {
+  id: number
+  code: string
+  name: string
+}
+
+const PaymentsMethod = ref<Method>({
+  id: 10,
+  code: '10',
+  name: '',
+})
 
 interface Producto {
   id: number
@@ -129,6 +142,9 @@ const clientes = ref<Cliente[]>([
 
 const clienteSeleccionado = ref<Cliente | null>(null)
 const clienteInfo = ref<Cliente | null>(null)
+
+const MetodoSeleccionado = ref<Method | null>(null)
+const metodoInfo = ref<Cliente | null>(null)
 
 // ===================== Documento =====================
 const docTipo = ref<TipoDocumento>('contado')
@@ -473,6 +489,7 @@ function limpiarFactura(): void {
   cantidadAgregar.value = 1
   descuentoItemAgregar.value = 0
   descuentoGlobal.value = 0
+  PaymentsMethod.value.id = 10
 
   seleccionarClientePorDefecto()
 }
@@ -487,6 +504,7 @@ const facturarInfo = async (factura: Factura) => {
       company_id: localStorage.getItem('company_id'),
       process_year: localStorage.getItem('process_year'),
       tipo_documento: docTipo.value,
+      payment_methods: PaymentsMethod.value.id,
     },
     {
     // El tercer argumento es la configuración (Headers, etc.)
@@ -579,6 +597,7 @@ const loadInfo = async () => {
 
     products.value = response.data.balances
     customers.value = response.data.customers
+    paymentmethods.value = response.data.payment_methods
 
     seleccionarClientePorDefecto()
 
@@ -586,7 +605,7 @@ const loadInfo = async () => {
     // sgrupos.value = response.data.sgrupos
     // unidades.value = response.data.unidades
 
-    console.log('Soy Datos:', responseData.value)
+    console.log('Soy Método de Pago:', paymentmethods.value)
   }
   catch (error) {
     console.error('Error al intentar enviar correo :', error)
@@ -1199,17 +1218,16 @@ if (producto)
                   </VRow>
 
                   <VSelect
-                    v-model="listaPrecioSeleccionada"
-                    :items="listasPrecios"
-                    item-title="nombre"
+                    v-model="PaymentsMethod.id"
+                    :items="paymentmethods"
+                    item-title="name"
                     item-value="id"
-                    label="Lista de precios a aplicar"
+                    label="Método de Pago"
                     variant="outlined"
                     density="comfortable"
                     rounded="lg"
                     prepend-inner-icon="mdi-tag-multiple-outline"
                     class="py-3"
-                    @update:model-value="recalcularPrecios"
                   />
 
                   <VTextField

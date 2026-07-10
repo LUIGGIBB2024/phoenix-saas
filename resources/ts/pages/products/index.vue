@@ -921,6 +921,7 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
                 class="mb-3 text_size mt-0"
                 :rules="[rules.required]"
                 placeholder="Ingrese Código del Producto"
+                :readonly="editMode"
                 @update:model-value="val => newRecord.code = val.toUpperCase()"
               >
                 <template #prepend-inner>

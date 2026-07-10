@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer('purchase_invoice')->nullable()->default(0);
             $table->string('prefix', 20)->nullable();
             $table->string('documento_purchase', 20)->nullable();
+            $table->string('order_number', 20)->nullable();
             $table->date('date_from')->nullable();
             $table->date('date_to')->nullable();
             $table->decimal('subtotal', 20, 2)->nullable();
@@ -39,7 +40,7 @@ return new class extends Migration
             $table->string('plate', 20)->nullable();
 
             $table->enum('type', ['Compras', 'Otras Entradas', 'Otras Salidas', 'Traslados', 'Devolución', 'Otras'])->default('Otras');
-            $table->enum('type_of_purchase', ['Compras', 'Otras Entradas', 'Otras Salidas', 'Traslados', 'Devolución', 'Otras'])->default('Otras');
+            $table->enum('type_of_purchase', ['Contado', 'Crédito'])->default('Crédito');
             $table->enum('state', ['Activo', 'Eliminado', 'Pendiente'])->nullable()->default('Activo');
             $table->string('state01', 20)->nullable();
             $table->string('state02', 20)->nullable();

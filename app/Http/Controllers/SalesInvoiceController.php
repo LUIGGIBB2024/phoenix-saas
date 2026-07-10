@@ -10,6 +10,7 @@ use App\Models\InventoryMovement;
 use App\Models\InvoiceDetail;
 use App\Models\MiscellaneousItem;
 use App\Models\Municipality;
+use App\Models\PaymentMethod;
 use App\Models\PriceList;
 use App\Models\SalesInvoice;
 use App\Models\Seller;
@@ -91,6 +92,8 @@ class SalesInvoiceController extends Controller
             ->get();
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        $query_methods_pay = PaymentMethod::whereIn('code', ['10', '20', '48', '49', '31'])->orderBy('name')->get();
 
         $query_zonas    = MiscellaneousItem::select('id', 'code', 'name')->where('miscellaneous_id', 8)->where('companies_id', $companies_id)->orderBy('name')->get();
         $query_rutas    = MiscellaneousItem::select('id', 'code', 'name')->where('miscellaneous_id', 9)->where('companies_id', $companies_id)->orderBy('name')->get();
@@ -198,6 +201,7 @@ class SalesInvoiceController extends Controller
         return response()->json([
             'balances' =>       $balances,
             'customers' =>      $customers,
+            'payment_methods' => $query_methods_pay,
         ]);
     }
 
@@ -220,6 +224,7 @@ class SalesInvoiceController extends Controller
         $query_sellers      = Seller::select('id', 'code', 'name')->where('companies_id', $companies_id)->where('id', $sellerid)->get();
 
         $tipodcumento = $request->input('tipo_documento') ?? null;
+        $paymentmethods = $request->input('payment_methods') ?? null;
         $tipodcto    = (trim($tipodcumento) == 'contado') ? 'Factura de Contado' : 'Factura Crédito';
         $numerofactura = 0;
         $nit = $request->factura['cliente']['nit'] ?? null;
@@ -280,6 +285,7 @@ class SalesInvoiceController extends Controller
                     'observations' => $request->factura['observaciones'] ?? null,
                     'type' => trim($tipodcumento) == 'contado' ? 'Contado' : 'Crédito',
                     'total_items' => $numeroDeRegistros,
+                    'payment_methods_id' => $paymentmethods,
                     'exempt_sales' => 0,
                     'taxed_sales' => 0,
                     'additional_value' => 0,
@@ -331,7 +337,7 @@ class SalesInvoiceController extends Controller
                 $basequantity =  $item['cantidad'] * $item['precioUnitario'];
 
                 $dscto1       =  $item['cantidad'] * $item['precioUnitario'] * ($item['descuentoPorcentaje'] / 100);
-                
+
 
                 $dscto2       =  (($item['cantidad'] * $item['precioUnitario']  - $dscto1) * $item['cantidad'] * 0 / 100);
                 //dd($dscto2);

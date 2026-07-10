@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { Spanish } from 'flatpickr/dist/l10n/es.js'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { VBtn } from 'vuetify/components/VBtn'
 import { VCard, VCardActions, VCardText, VCardTitle } from 'vuetify/components/VCard'
@@ -59,6 +58,48 @@ const updateOptions = async (options: any) => {
 }
 
 // 🔹 Encabezados de la tabla
+export interface Supplier {
+  id?: number | null
+  nit?: string
+  branch?: string
+  dv?: string
+  patient_id?: string
+  code?: string
+  name?: string
+  firstname?: string
+  lastname?: string
+  comercial_name?: string
+  address?: string
+  phone?: string
+  email?: string
+  contact_phone?: string
+  name_contact?: string
+  email_contact?: string
+  position_contact?: string
+  latitude?: string
+  longitude?: string
+  economic_activity?: string
+  zip_code?: string
+  business_registration?: string
+  bank_account_id?: number
+  branch_id?: number
+  type_id?: number
+  municipalities_id?: number
+  type_document_identification_id?: number
+  companies_id?: number
+  type_regime_id?: number
+  type_liability_id?: number
+  stype_of_taxpayer?: 'Gran Contribuyente' | 'Auto Retenedor' | 'Régimen Común' | 'Régimen Simplificado' | 'Otro'
+  state?: 'Activo' | 'Inactivo'
+  retesource?: 'Si' | 'No'
+  reteiva?: 'Si' | 'No'
+  reteica?: 'Si' | 'No'
+  created_at?: string | Date
+  updated_at?: string | Date
+  usercreate?: string
+  userupdate?: string
+}
+
 export interface Customer {
   id?: number
   nit?: string
@@ -124,14 +165,13 @@ export interface Customer {
 const showDialog = ref(false)
 const editMode = ref(false) // 👈 false = crear, true = editar
 
-const newRecord = ref<Customer>({
+const newRecord = ref<Supplier>({
   id: 0,
   nit: '',
-  dv: '',
   branch: '',
+  dv: '',
   patient_id: '',
   code: '',
-  provider_code: '',
   name: '',
   firstname: '',
   lastname: '',
@@ -139,51 +179,32 @@ const newRecord = ref<Customer>({
   address: '',
   phone: '',
   email: '',
-  latitude: '',
-  longitude: '',
-  zip_code: '',
-  nit_representative: '',
   contact_phone: '',
   name_contact: '',
   email_contact: '',
-  health_contract_number: '',
-  health_policy_number: '',
-  credit_quota: 0,
-  deadline_days: 0,
-  point: 0,
-  accumulated_points: 0,
-  birthday: (hoy),
-  last_purchase_date: (hoy),
-  creation_date: (hoy),
+  position_contact: '',
+  latitude: '',
+  longitude: '',
   economic_activity: '',
+  zip_code: '',
   business_registration: '',
-  sales_account: '',
-  center: '',
-  scenter: '',
-  health_service_coverage_id: null,
-  health_payment_method_id: null,
+  bank_account_id: null,
   branch_id: null,
-  route_id: null,
-  zone_id: null,
   type_id: null,
-  neighborhood_id: null,
-  price_list_id: null,
   municipalities_id: null,
-  sellers_id: undefined,
   type_document_identification_id: null,
-  companies_id: 0,
+  companies_id: null,
   type_regime_id: null,
   type_liability_id: null,
-  sex: 'Masculino',
+  stype_of_taxpayer: 'Régimen Simplificado',
   state: 'Activo',
-  typeofcurrency: 'Pesos',
   retesource: 'No',
   reteiva: 'No',
   reteica: 'No',
-  declare_income: 'No',
-  control_points: 'No',
-  capture_signature: 'No',
-
+  created_at: new Date(),
+  updated_at: new Date(),
+  usercreate: 'System',
+  userupdate: 'System',
 })
 
 // watch(archivos, files => {
@@ -214,7 +235,7 @@ const lists = ref([])
 const sellers = ref([])
 const zones = ref([])
 const routes = ref([])
-const typecust = ref([])
+const typesupp = ref([])
 const neighborhoods = ref([])
 const municipalities = ref([])
 const liabilities = ref([])
@@ -234,72 +255,58 @@ const rules = {
 // 🔹 Observa el estado del diálogo
 watch(showDialog, isOpen => {
   if (isOpen && !editMode.value) {
+    const firstTypeId = typesupp.value && typesupp.value.length > 0
+      ? typesupp.value[0].id
+      : null
+
     // Se abre el diálogo → limpiar los campos
     newRecord.value = {
       id: null,
       nit: '',
-      dv: '',
       branch: '01',
+      dv: '',
       patient_id: '',
-      code: '000001',
-      provider_code: '',
+      code: '0000000001',
       name: '',
       firstname: '',
       lastname: '',
       comercial_name: '',
+      address: '',
       phone: '',
       email: '',
-      latitude: '',
-      longitude: '',
-      zip_code: '000000',
-      nit_representative: '',
       contact_phone: '',
       name_contact: '',
       email_contact: '',
-      health_contract_number: '',
-      health_policy_number: '',
-      credit_quota: 0,
-      deadline_days: 0,
-      point: 0,
-      accumulated_points: 0,
-      birthday: (hoy),
-      last_purchase_date: (hoy),
-      creation_date: (hoy),
+      position_contact: '',
+      latitude: '',
+      longitude: '',
       economic_activity: '7110',
+      zip_code: '000000',
       business_registration: '111111',
-      sales_account: '',
-      center: '',
-      scenter: '',
-      health_service_coverage_id: null,
-      health_payment_method_id: null,
+      bank_account_id: null,
       branch_id: null,
-      route_id: 1,
-      zone_id: 1,
-      type_id: 1,
-      neighborhood_id: null,
-      price_list_id: 1,
+      type_id: firstTypeId,
       municipalities_id: null,
-      sellers_id: 1,
       type_document_identification_id: 3,
-      companies_id: 0,
-      type_regime_id: null,
-      type_liability_id: null,
-      sex: 'Masculino',
+      companies_id: null,
+      type_regime_id: 2,
+      type_liability_id: 5,
+      stype_of_taxpayer: 'Régimen Simplificado',
       state: 'Activo',
-      typeofcurrency: 'Pesos',
       retesource: 'No',
       reteiva: 'No',
       reteica: 'No',
-      declare_income: 'No',
-      control_points: 'No',
-      capture_signature: 'No',
+      created_at: new Date(),
+      updated_at: new Date(),
+      usercreate: 'System',
+      userupdate: 'System',
     }
   }
 })
 
 const loadInfo = async () => {
   try {
-    const response = await axios.get('/api/getcustomers', {
+    const response = await axios.get('/api/getsuppliers', {
       params: {
         q: searchQuery.value,
         itemsPerPage: itemsPerPage.value,
@@ -319,7 +326,7 @@ const loadInfo = async () => {
     lists.value = response.data.lists
     zones.value = response.data.zones
     routes.value = response.data.routes
-    typecust.value = response.data.typecust
+    typesupp.value = response.data.typesupl
     neighborhoods.value = response.data.neighborhoods
     municipalities.value = response.data.municipalities
     liabilities.value = response.data.liabilities
@@ -385,13 +392,13 @@ const saveRecord = async () => {
 
   try {
     const url = newRecord.value.id
-      ? `/api/customers/${newRecord.value.id}`
-      : '/api/customers'
+      ? `/api/suppliers/${newRecord.value.id}`
+      : '/api/suppliers'
 
     const { data } = await axios.post(url, formData)
 
     // 🔍 1. Confirmar qué llega del backend
-    console.log('1. data.customers desde backend:', data.customers.municipalities_id)
+    console.log('1. data.suppliers desde backend:', data.suppliers.municipalities_id)
 
     // 🔎 Buscamos los nombres correspondientes a los códigos seleccionados
     const ciudadSeleccionada = municipalities.value.find(
@@ -401,8 +408,8 @@ const saveRecord = async () => {
     console.log('3. Ciudad Seleccionada:', ciudadSeleccionada)
 
     // 🧩 Mergeamos el producto crudo del backend con los nombres frescos
-    const clienteActualizado = {
-      ...data.customers,
+    const registroActualizado = {
+      ...data.suppliers,
       city_name: ciudadSeleccionada?.name ?? null,
     }
 
@@ -414,18 +421,18 @@ const saveRecord = async () => {
       if (index !== -1) {
         responseData.value.data = [
           ...responseData.value.data.slice(0, index),
-          { ...clienteActualizado }, // ✅ sin .value
+          { ...registroActualizado }, // ✅ sin .value
           ...responseData.value.data.slice(index + 1),
         ]
       }
     }
     else {
-      responseData.value.data = [...responseData.value.data, { ...clienteActualizado }] // ✅ sin .value
+      responseData.value.data = [...responseData.value.data, { ...registroActualizado }] // ✅ sin .value
     }
 
     snackbarMessage.value = newRecord.value.id
-      ? 'Cliente actualizado correctamente'
-      : 'Cliente creado correctamente'
+      ? 'Proveedor Actualizado correctamente'
+      : 'Proveedor Creado correctamente'
     snackbarColor.value = 'success'
 
     certificateFileModel.value = null
@@ -433,7 +440,7 @@ const saveRecord = async () => {
   }
   catch (error: any) {
     console.error('Error:', error.response?.data)
-    snackbarMessage.value = 'Error al guardar el Cliente'
+    snackbarMessage.value = 'Error al guardar el Proveedor'
     snackbarColor.value = 'error'
   }
   finally {
@@ -456,11 +463,9 @@ const openEditDialog = _infoData => {
   newRecord.value = {
     id: _infoData.id,
     nit: _infoData.nit,
-    dv: _infoData.dv,
     branch: _infoData.branch,
     patient_id: _infoData.patient_id,
     code: _infoData.code,
-    provider_code: _infoData.provider_code,
     name: _infoData.name,
     firstname: _infoData.firstname,
     lastname: _infoData.lastname,
@@ -468,131 +473,36 @@ const openEditDialog = _infoData => {
     address: _infoData.address,
     phone: _infoData.phone,
     email: _infoData.email,
-    latitude: _infoData.latitude,
-    longitude: _infoData.longitude,
-    zip_code: _infoData.zip_code,
-    nit_representative: _infoData.nit_representative,
     contact_phone: _infoData.contact_phone,
     name_contact: _infoData.name_contact,
     email_contact: _infoData.email_contact,
-    health_contract_number: _infoData.health_contract_number,
-    health_policy_number: _infoData.health_policy_number,
-    credit_quota: _infoData.credit_quota,
-    deadline_days: _infoData.deadline_days,
-    point: _infoData.point,
-    accumulated_points: _infoData.accumulated_points,
-    birthday: _infoData.birthday,
-    last_purchase_date: _infoData.last_purchase_date,
-    creation_date: _infoData.creation_date,
+    position_contact: _infoData.position_contact,
+    latitude: _infoData.latitude,
+    longitude: _infoData.longitude,
     economic_activity: _infoData.economic_activity,
+    zip_code: _infoData.zip_code,
     business_registration: _infoData.business_registration,
-    sales_account: _infoData.sales_account,
-    center: _infoData.center,
-    scenter: _infoData.scenter,
 
     // ⚠️ Todos estos son FKs que alimentan AppSelect -> normalizamos a número
-    health_service_coverage_id: toId(_infoData.health_service_coverage_id),
-    health_payment_method_id: toId(_infoData.health_payment_method_id),
+    bank_account_id: toId(_infoData.bank_account_id),
     branch_id: toId(_infoData.branch_id),
-    route_id: toId(_infoData.route_id),
-    zone_id: toId(_infoData.zone_id),
     type_id: toId(_infoData.type_id),
-    neighborhood_id: toId(_infoData.neighborhood_id),
-    price_list_id: toId(_infoData.price_list_id),
     municipalities_id: toId(_infoData.municipalities_id),
-    sellers_id: toId(_infoData.sellers_id),
     type_document_identification_id: toId(_infoData.type_document_identification_id),
     companies_id: toId(_infoData.companies_id),
     type_regime_id: toId(_infoData.type_regime_id),
     type_liability_id: toId(_infoData.type_liability_id),
 
-    sex: _infoData.sex,
+    stype_of_taxpayer: _infoData.stype_of_taxpayer,
     state: _infoData.state,
-    typeofcurrency: _infoData.typeofcurrency,
     retesource: _infoData.retesource,
     reteiva: _infoData.reteiva,
     reteica: _infoData.reteica,
-    declare_income: _infoData.declare_income,
-    control_points: _infoData.control_points,
-    capture_signature: _infoData.capture_signature,
+    created_at: _infoData.created_at,
+    updated_at: _infoData.updated_at,
     usercreate: _infoData.usercreate,
     userupdate: _infoData.userupdate,
   }
-
-  showDialog.value = true
-}
-
-// 🔹 Abrir modal en modo edición
-const openEditDialog1 = _infoData => {
-  editMode.value = true
-  certificateFileModel.value = null
-
-  // console.log('Soy Grupo y SubGrupo :', _infoData.group_name, '-', _infoData.sgroup_name)
-  newRecord.value = {
-    id: _infoData.id,
-    nit: _infoData.nit,
-    dv: _infoData.dv,
-    branch: _infoData.branch,
-    patient_id: _infoData.patient_id,
-    code: _infoData.code,
-    provider_code: _infoData.provider_code,
-    name: _infoData.name,
-    firstname: _infoData.firstname,
-    lastname: _infoData.lastname,
-    comercial_name: _infoData.comercial_name,
-    address: _infoData.address,
-    phone: _infoData.phone,
-    email: _infoData.email,
-    latitude: _infoData.latitude,
-    longitude: _infoData.longitude,
-    zip_code: _infoData.zip_code,
-    nit_representative: _infoData.nit_representative,
-    contact_phone: _infoData.contact_phone,
-    name_contact: _infoData.name_contact,
-    email_contact: _infoData.email_contact,
-    health_contract_number: _infoData.health_contract_number,
-    health_policy_number: _infoData.health_policy_number,
-    credit_quota: _infoData.credit_quota,
-    deadline_days: _infoData.deadline_days,
-    point: _infoData.point,
-    accumulated_points: _infoData.accumulated_points,
-    birthday: _infoData.birthday,
-    last_purchase_date: _infoData.last_purchase_date,
-    creation_date: _infoData.creation_date,
-    economic_activity: _infoData.economic_activity,
-    business_registration: _infoData.business_registration,
-    sales_account: _infoData.sales_account,
-    center: _infoData.center,
-    scenter: _infoData.scenter,
-    health_service_coverage_id: _infoData.health_service_coverage_id,
-    health_payment_method_id: _infoData.health_payment_method_id,
-    branch_id: _infoData.branch_id,
-    route_id: _infoData.route_id,
-    zone_id: _infoData.zone_id,
-    type_id: _infoData.type_id,
-    neighborhood_id: _infoData.neighborhood_id,
-    price_list_id: _infoData.price_list_id,
-    municipalities_id: _infoData.municipalities_id,
-    sellers_id: _infoData.sellers_id,
-    type_document_identification_id: _infoData.type_document_identification_id,
-    companies_id: _infoData.companies_id,
-    type_regime_id: _infoData.type_regime_id,
-    type_liability_id: _infoData.type_liability_id,
-    sex: _infoData.sex,
-    state: _infoData.state,
-    typeofcurrency: _infoData.typeofcurrency,
-    retesource: _infoData.retesource,
-    reteiva: _infoData.reteiva,
-    reteica: _infoData.reteica,
-    declare_income: _infoData.declare_income,
-    control_points: _infoData.control_points,
-    capture_signature: _infoData.capture_signature,
-    usercreate: _infoData.usercreate,
-    userupdate: _infoData.userupdate,
-  }
-
-  // ✅ Verificar que el valor llega
-  console.log('Soy Id Edit :', _infoData.id)
 
   showDialog.value = true
 }
@@ -607,57 +517,39 @@ const openCreateDialog = () => {
     dv: '',
     patient_id: '',
     code: '',
-    provider_code: '',
     name: '',
     firstname: '',
     lastname: '',
     comercial_name: '',
+    address: '',
     phone: '',
     email: '',
-    latitude: '',
-    longitude: '',
-    zip_code: '',
-    nit_representative: '',
     contact_phone: '',
     name_contact: '',
     email_contact: '',
-    health_contract_number: '',
-    health_policy_number: '',
-    credit_quota: 0,
-    deadline_days: 0,
-    point: 0,
-    accumulated_points: 0,
-    birthday: (hoy),
-    last_purchase_date: (hoy),
-    creation_date: (hoy),
-    economic_activity: '',
-    business_registration: '',
-    sales_account: '',
-    center: '',
-    scenter: '',
-    health_service_coverage_id: null,
-    health_payment_method_id: null,
+    position_contact: '',
+    latitude: '',
+    longitude: '',
+    economic_activity: '7110',
+    zip_code: '200001',
+    business_registration: '111111',
+    bank_account_id: null,
     branch_id: null,
-    route_id: null,
-    zone_id: null,
-    type_id: null,
-    neighborhood_id: null,
-    price_list_id: null,
+    type_id: 1,
     municipalities_id: null,
-    sellers_id: undefined,
     type_document_identification_id: 3,
-    companies_id: 0,
+    companies_id: null,
     type_regime_id: null,
     type_liability_id: null,
-    sex: 'Masculino',
+    stype_of_taxpayer: 'Régimen Simplificado',
     state: 'Activo',
-    typeofcurrency: 'Pesos',
     retesource: 'No',
     reteiva: 'No',
     reteica: 'No',
-    declare_income: 'No',
-    control_points: 'No',
-    capture_signature: 'No',
+    created_at: new Date(),
+    updated_at: new Date(),
+    usercreate: 'System',
+    userupdate: 'System',
   }
 
   // console.log('🆕 Abriendo modal para nuevo clientes :', newRecord.value.type_document_identification_id, ' TypeIdent:', typedocument.value)
@@ -666,7 +558,7 @@ const openCreateDialog = () => {
 
 // 🔹 Abrir confirmación de eliminación
 const confirmDelete = (id: number) => {
-  console.log('🛑 Confirmar eliminación del Cliente ID:', id)
+  console.log('🛑 Confirmar eliminación del Proveedor ID:', id)
   recordToDelete.value = id
   nameRecordToDelete.value = infoData.value.find(c => c.id === id)?.name || ''
   showConfirmDialog.value = true
@@ -678,7 +570,7 @@ const deleteRecord = async () => {
     return
 
   try {
-    await $api(`/api/customers/${recordToDelete.value}`, {
+    await $api(`/api/suppliers/${recordToDelete.value}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
@@ -686,12 +578,12 @@ const deleteRecord = async () => {
       },
     })
     loadInfo()
-    snackbarMessage.value = '✅ Cliente eliminado correctamente'
+    snackbarMessage.value = '✅ Proveedor eliminado correctamente'
     snackbarColor.value = 'success'
   }
   catch (error) {
-    console.error('❌ Error al eliminar el Cliente:', error)
-    snackbarMessage.value = '❌ Error al eliminar el Cliente'
+    console.error('❌ Error al eliminar el Proveedor:', error)
+    snackbarMessage.value = '❌ Error al eliminar el Proveedor'
     snackbarColor.value = 'error'
   }
   finally {
@@ -787,11 +679,6 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
 
   return { formattedValue, onlyNumbersAndDot, isFocused }
 }// Instancias la función para cada campo de tu formulario
-const cupoField = useNumericField(newRecord, 'credit_quota')
-const plazoField = useNumericField(newRecord, 'deadline_days')
-const puntosField = useNumericField(newRecord, 'point')
-const acumpuntosField = useNumericField(newRecord, 'accumulated_points')
-
 // const renField = useNumericField(newRecord, 'profitability')
 // const stckminField = useNumericField(newRecord, 'minimum_stocky')
 // const stckmaxField = useNumericField(newRecord, 'maximum_stock')
@@ -866,12 +753,25 @@ watch(
     }
   })
 
+// Forzar que el componente re-evalúe el match una vez que el arreglo typesupp tenga datos
+watch(() => typesupp.value, newItems => {
+  if (newItems && newItems.length > 0) {
+    // Busquemos si el ID en el arreglo viene como string ('1') o como number (1)
+    const firstItem = newItems[0]
+    const isStringId = typeof firstItem.id === 'string'
+
+    if (newRecord.value.type_id == 1) { // Usamos '==' para que entre ya sea 1 o '1'
+      newRecord.value.type_id = isStringId ? '1' : 1
+    }
+  }
+}, { deep: true, immediate: true }) // 'immediate: true' por si el arreglo ya tiene datos al montar
+
 const headers = [
   { title: '#', key: 'id' },
   { title: 'Nit/Cédula', key: 'nit', sortable: true, width: '10%' },
   { title: 'DV', key: 'dv', sortable: true, width: '2%' },
   { title: 'Suc', key: 'branch', sortable: true, width: '10%' },
-  { title: 'Nombre del Cliente', key: 'name', sortable: true, width: '35%' },
+  { title: 'Nombre del Proveedor', key: 'name', sortable: true, width: '35%' },
   { title: 'dirección', key: 'address', sortable: true, width: '35%' },
   { title: 'Teléfono', key: 'phone', sortable: true },
   { title: 'email', key: 'email', sortable: true },
@@ -890,9 +790,9 @@ const headers = [
         md="2"
         class="d-flex align-left flex-column"
       >
-        <h3 class="text-primary mb-2">
-          Mantenimiento de Clientes
-        </h3>
+        <h4 class="text-primary mb-2">
+          Mantenimiento de Proveedores
+        </h4>
         <VCardText class="d-flex align-center flex-wrap gap-4 pa-0">
           <VTextField
             v-model="searchQuery"
@@ -931,7 +831,7 @@ const headers = [
               size="20"
             />
           </template>
-          Nuevo Cliente
+          Nuevo Proveedor
         </VBtn>
       </VCol>
     </VRow>
@@ -1090,16 +990,16 @@ const headers = [
   >
     <VCard>
       <!-- <VCardTitle class="text-h5 bg-primary text-white py-4 px-4">Agregar nueva empresa</VCardTitle> -->
-      <VCardTitle class="modal-title d-flex align-center text-h5">
+      <VCardTitle class="modal-title d-flex align-center text-h6">
         <VIcon
-          icon="tabler-building"
+          icon="tabler-building-factory-2"
           size="28"
           color="white"
           class="me-3"
         />
-        {{ newRecord.id ? 'Actualizando un Cliente' : 'Agregando un Cliente' }}
+        {{ newRecord.id ? 'Actualizando un Proveedor' : 'Agregando un Proveedor' }}
         <span
-          class="text-h5 font-weight-bold ml-2"
+          class="text-h6 font-weight-bold ml-2"
           style="color: #f7fb2d !important;"
         >
           ID: {{ String(newRecord.id || 0).padStart(8, '0') }}
@@ -1148,7 +1048,6 @@ const headers = [
                   placeholder="Nit/Cédula"
                   density="comfortable"
                   variant="outlined"
-                  :readonly="editMode"
                   hide-details
                   @update:model-value="val => newRecord.nit = val.replace(/\D/g, '')"
                 >
@@ -1172,7 +1071,6 @@ const headers = [
                 <AppTextField
                   v-model="newRecord.dv"
                   label="DV"
-                  disabled
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
                   placeholder="DV"
@@ -1230,11 +1128,11 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.firstname"
-                  label="Nombres del Cliente / Nombre Empresa"
+                  label="Nombres (PerNatural) / Nombre Empresa"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
-                  placeholder="Ingrese Nombre del Cliente"
+                  placeholder="Ingrese Nombre del Proveedor"
                   density="comfortable"
                   variant="outlined"
                   hide-details
@@ -1257,11 +1155,11 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.lastname"
-                  label="Apellidos del Cliente"
+                  label="Apellidos (PerNatural)"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
-                  placeholder="Ingrese Apellidos del Cliente"
+                  placeholder="Ingrese Apellidos del Proveedor"
                   density="comfortable"
                   variant="outlined"
                   hide-details
@@ -1290,11 +1188,11 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.name"
-                  label="Nombre Completo del Cliente"
+                  label="Nombre Completo del Proveedor"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
-                  placeholder="Ingrese NOmbre Completo del Cliente"
+                  placeholder="Ingrese NOmbre Completo del Proveedor"
                   density="comfortable"
                   variant="outlined"
                   hide-details
@@ -1350,11 +1248,11 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.address"
-                  label="Dirección del Cliente"
+                  label="Dirección del Proveedor"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
-                  placeholder="Ingrese Dirección de la Cliente"
+                  placeholder="Ingrese Dirección del Proveedor"
                   density="comfortable"
                   variant="outlined"
                   hide-details
@@ -1377,7 +1275,7 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.email"
-                  label="Correo del Cliente"
+                  label="Correo del Proveedor"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
@@ -1410,11 +1308,11 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.phone"
-                  label="Telefóno del Cliente"
+                  label="Telefóno del Proveedor"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
-                  placeholder="Teléfono del Cliente"
+                  placeholder="Teléfono del Proveedor"
                   density="comfortable"
                   variant="outlined"
                   hide-details
@@ -1438,7 +1336,7 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecord.code"
-                  label="Código Cliente"
+                  label="Código Proveedor"
                   required
                   class="mb-2 text_size aligned-field"
                   :rules="[rules.required]"
@@ -1628,179 +1526,16 @@ const headers = [
             >
               <VCol
                 cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppDateTimePicker
-                  v-model="newRecord.birthday"
-                  label="Fecha de Nacimiento :"
-                  placeholder="Seleccionar Fecha"
-                  class="text-center-input mb-2"
-                  variant="outlined"
-                  prepend-inner-icon="tabler-calendar"
-                  :config="{ locale: Spanish, dateFormat: 'Y-m-d' }"
-                />
-              </VCol>
-
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppDateTimePicker
-                  v-model="newRecord.creation_date"
-                  label="Fecha de Creación :"
-                  placeholder="Seleccionar Fecha"
-                  class="text-center-input mb-2"
-                  variant="outlined"
-                  prepend-inner-icon="tabler-calendar"
-                  :config="{ locale: Spanish, dateFormat: 'Y-m-d' }"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppDateTimePicker
-                  v-model="newRecord.last_purchase_date"
-                  label="Fecha Ultima Compra :"
-                  placeholder="Seleccionar Fecha"
-                  class="text-center-input mb-2"
-                  variant="outlined"
-                  prepend-inner-icon="tabler-calendar"
-                  :config="{ locale: Spanish, dateFormat: 'Y-m-d' }"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppTextField
-                  v-model="cupoField.formattedValue.value"
-                  label="Cupo de Cartera"
-                  class="mb-2 text_size"
-                  placeholder="Ingrese Cupo Cartera"
-                  @keypress="cupoField.onlyNumbersAndDot"
-                  @focus="cupoField.isFocused.value = true"
-                  @blur="cupoField.isFocused.value = false"
-                >
-                  <template #prepend-inner>
-                    <VIcon
-                      icon="tabler-currency-dollar"
-                      color="primary"
-                      size="22"
-                      class="me-2"
-                    />
-                  </template>
-                </AppTextField>
-              </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppTextField
-                  v-model="plazoField.formattedValue.value"
-                  label="Días de Plazo"
-                  class="mb-2 text_size"
-                  placeholder="Días de Plazo"
-                  @keypress="plazoField.onlyNumbersAndDot"
-                  @focus="plazoField.isFocused.value = true"
-                  @blur="plazoField.isFocused.value = false"
-                >
-                  <template #prepend-inner>
-                    <VIcon
-                      icon="tabler-clock-12"
-                      color="primary"
-                      size="22"
-                      class="me-2"
-                    />
-                  </template>
-                </AppTextField>
-              </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppTextField
-                  v-model="acumpuntosField.formattedValue.value"
-                  label="Puntos Acumulados"
-                  class="mb-2 text_size"
-                  placeholder="Puntos Acumulados"
-                  @keypress="acumpuntosField.onlyNumbersAndDot"
-                  @focus="acumpuntosField.isFocused.value = true"
-                  @blur="acumpuntosField.isFocused.value = false"
-                >
-                  <template #prepend-inner>
-                    <VIcon
-                      icon="tabler-sum"
-                      color="primary"
-                      size="22"
-                      class="me-2"
-                    />
-                  </template>
-                </AppTextField>
-              </VCol>
-            </VRow>
-            <VRow
-              dense
-              align="center"
-              class="g-2 mt-0"
-            >
-              <VCol
-                cols="12"
                 md="3"
                 class="py-0"
               >
                 <AppSelect
-                  v-model="newRecord.sellers_id"
-                  :items="sellers"
-                  label="Vendedor"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  density="comfortable"
-                  rounded="lg"
-                  color="primary"
-                  hide-details
-                  class="mb-2 text_size aligned-field cfg_select"
-                  v-bind="$attrs"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="3"
-                class="py-0"
-              >
-                <AppSelect
-                  v-model="newRecord.price_list_id"
-                  :items="lists"
-                  label="Lista de Precios"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  density="comfortable"
-                  rounded="lg"
-                  color="primary"
-                  hide-details
-                  class="mb-2 text_size aligned-field cfg_select"
-                  v-bind="$attrs"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppSelect
+                  :key="+showDialog"
                   v-model="newRecord.type_id"
-                  :items="typecust"
+                  :items="typesupp"
                   item-title="name"
                   item-value="id"
-                  label="Tipo de Cliente"
+                  label="Tipo de Proveedor"
                   variant="outlined"
                   density="comfortable"
                   rounded="lg"
@@ -1810,52 +1545,6 @@ const headers = [
                   v-bind="$attrs"
                 />
               </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppSelect
-                  v-model="newRecord.zone_id"
-                  :items="zones"
-                  item-title="name"
-                  item-value="id"
-                  label="Zona de Venta"
-                  variant="outlined"
-                  density="comfortable"
-                  rounded="lg"
-                  color="primary"
-                  hide-details
-                  class="mb-2 text_size aligned-field cfg_select"
-                  v-bind="$attrs"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="2"
-                class="py-0"
-              >
-                <AppSelect
-                  v-model="newRecord.route_id"
-                  :items="routes"
-                  item-title="name"
-                  item-value="id"
-                  label="Ruta de Venta"
-                  variant="outlined"
-                  density="comfortable"
-                  rounded="lg"
-                  color="primary"
-                  hide-details
-                  class="mb-2 text_size aligned-field cfg_select"
-                  v-bind="$attrs"
-                />
-              </VCol>
-            </VRow>
-            <VRow
-              dense
-              align="center"
-              class="g-2 mt-0"
-            >
               <VCol
                 cols="12"
                 md="3"
@@ -1867,46 +1556,6 @@ const headers = [
                   item-title="name"
                   item-value="id"
                   label="Ciudad"
-                  variant="outlined"
-                  density="comfortable"
-                  rounded="lg"
-                  color="primary"
-                  hide-details
-                  class="mb-2 text_size aligned-field cfg_select"
-                  v-bind="$attrs"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="3"
-                class="py-0"
-              >
-                <AppSelect
-                  v-model="newRecord.neighborhood_id"
-                  :items="neighborhoods"
-                  item-title="name"
-                  item-value="id"
-                  label="Barrios"
-                  variant="outlined"
-                  density="comfortable"
-                  rounded="lg"
-                  color="primary"
-                  hide-details
-                  class="mb-2 text_size aligned-field cfg_select"
-                  v-bind="$attrs"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="3"
-                class="py-0"
-              >
-                <AppSelect
-                  v-model="newRecord.sex"
-                  :items="typecustomers"
-                  item-title="name"
-                  item-value="id"
-                  label="Sexo"
                   variant="outlined"
                   density="comfortable"
                   rounded="lg"
@@ -1937,6 +1586,7 @@ const headers = [
                 />
               </VCol>
             </VRow>
+
             <VRow
               dense
               align="center"

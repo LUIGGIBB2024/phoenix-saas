@@ -10,12 +10,15 @@ use App\Http\Controllers\DianController;
 use App\Http\Controllers\DianEventController;
 use App\Http\Controllers\DianEventoController;
 use App\Http\Controllers\InventoryBalanceController;
+use App\Http\Controllers\InventoryDocumentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesInvoiceController;
 use App\Http\Controllers\ScrapingController;
 use App\Http\Controllers\ScrapingDianController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Models\InventoryBalance;
+use App\Models\InventoryDocument;
 use App\Models\User;
 
 use RoachPHP\Roach;
@@ -112,6 +115,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/customers/{id}', [CustomerController::class, 'update']);
     Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
 
+    Route::get('/getsuppliers', [SupplierController::class, 'getSuppliers']);
+    Route::post('/suppliers', [SupplierController::class, 'store']);
+    Route::post('/suppliers/{id}', [SupplierController::class, 'update']);
+    Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
+
     Route::get('/getbalances', [InventoryBalanceController::class, 'getBalances']);
     Route::post('/balances', [InventoryBalanceController::class, 'store']);
     Route::post('/balances/{id}', [InventoryBalanceController::class, 'update']);
@@ -121,6 +129,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/facturas', [SalesInvoiceController::class, 'store']);
     Route::post('/facturas-consultas', [SalesInvoiceController::class, 'getSalesInvoices']);
     Route::post('/facturas-detalle/{id}', [SalesInvoiceController::class, 'getDetSalesInvoices']);
+
+    Route::get('/getdocuments', [InventoryDocumentController::class, 'getDocuments']);
+    Route::post('/purchases', [InventoryDocumentController::class, 'store']);
+    Route::post('/purchases-details', [InventoryDocumentController::class, 'storedetails']);
 });
 
 Route::post('/dian/recibir-token', [DianController::class, 'recibirToken']);
