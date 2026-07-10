@@ -30,6 +30,7 @@ Route::post('/login-n8n', [AuthController::class, 'loginn8n']);
 Route::post('/register', [AuthController::class, 'register']);
 //Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
 
+
 Route::get('/test-timezone', function () {
     return [
         'timezone_config' => config('app.timezone'),
