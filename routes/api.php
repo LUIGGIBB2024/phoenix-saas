@@ -49,6 +49,7 @@ Route::get('/logout', function () {
     return response()->json(['message' => 'Logged out successfully']);
 });
 
+
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/getcompanies', [CompanyController::class, 'getCompanies']);
     Route::post('/companies', [CompanyController::class, 'store']);
