@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ControlController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CxpPaymentController;
 use App\Http\Controllers\DianController;
 use App\Http\Controllers\DianEventController;
 use App\Http\Controllers\DianEventoController;
@@ -135,6 +136,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/getdocuments', [InventoryDocumentController::class, 'getDocuments']);
     Route::post('/purchases', [InventoryDocumentController::class, 'store']);
     Route::post('/purchases-details', [InventoryDocumentController::class, 'storedetails']);
+
+    Route::get('/getsupplierpayments', [CxpPaymentController::class, 'getPayments']);
+    Route::post('/supplierpayment', [CxpPaymentController::class, 'store']);
+    Route::post('/supplierpayment-details', [CxpPaymentController::class, 'storedetails']);
 });
 
 Route::post('/dian/recibir-token', [DianController::class, 'recibirToken']);

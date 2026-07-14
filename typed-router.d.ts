@@ -261,6 +261,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'egresos': RouteRecordInfo<
+      'egresos',
+      '/egresos',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'facturas': RouteRecordInfo<
       'facturas',
       '/facturas',
@@ -629,6 +636,12 @@ declare module 'vue-router/auto-routes' {
     'resources/ts/pages/documentosdian/support.vue': {
       routes:
         | 'documentosdian-support'
+      views:
+        | never
+    }
+    'resources/ts/pages/egresos/index.vue': {
+      routes:
+        | 'egresos'
       views:
         | never
     }

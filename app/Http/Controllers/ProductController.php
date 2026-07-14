@@ -6,8 +6,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 use App\Http\Controllers\Controller;
 use App\Models\MiscellaneousItem;
+use App\Models\PriceDetail;
 use App\Models\Product;
 use App\Models\UnitMeasur;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -64,6 +66,8 @@ class ProductController extends Controller
         $data['companies_id'] = $companyId;
 
         $product = \App\Models\Product::create($data);
+
+        $this->updatelist($request);
 
         return response()->json([
             'message' => 'Empresa creada exitosamente',
@@ -138,6 +142,8 @@ class ProductController extends Controller
         try {
             $product->update($data);
 
+            $this->updatelist($request);
+
             return response()->json([
                 'message' => 'Producto Actualizado exitosamente (200)',
                 'products' => $product,
@@ -148,6 +154,47 @@ class ProductController extends Controller
                 'error' => $e->getMessage()
             ], 408);
         }
+    }
+
+    public function updatelist(Request $request)
+    {
+        $companyId      = $request->input('companies_id');
+        $product        = $request->input('code');
+        $codlista       = "01";
+        $percent        = $request->input('percent');
+        $valor          = $request->input('sale_value');
+        $producto       = Product::where('code', $product)->where('companies_id', $companyId)->first();
+        $idproduct      = $producto->id;
+   
+        try {
+            $reg_prod = PriceDetail::updateOrCreate(
+                [
+                    // Campos únicos para localizar la fila exacta sin pisar otros productos
+                    'code'          => $codlista,
+                    'product'       => $product,
+                    'companies_id'  => $companyId,
+                ],
+                [
+                    'vat'                    => $percent,
+                    'price'                  => $valor,
+                    'priceunit'              => $valor,
+                    'beforevat'              => $valor,
+                    'products_id'            => $idproduct,
+                ]
+            );
+        } catch (\Exception $ex) {
+            return response()->json(
+
+                [
+                    'status'   => '404 OK',
+                    'msg'      => 'Error en la actualización de la factura: ' . $numerofactura,
+                    'error' => $ex,
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return response()->json(['message' => 'Precios Actualizado Exitosamente']);
     }
 
     public function getProducts(Request $request): JsonResponse

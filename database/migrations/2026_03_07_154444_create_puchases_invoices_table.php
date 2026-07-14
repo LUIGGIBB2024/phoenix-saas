@@ -14,12 +14,13 @@ return new class extends Migration
     {
         Schema::create('purchases_invoices', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('date_issue')->nullable()->index();
-            $table->dateTime('expiration_date')->nullable();
+            $table->date('date_issue')->nullable()->index();
+            $table->date('expiration_date')->nullable();
             $table->decimal('number', 20, 0)->nullable();
             $table->string('prefix', 20)->nullable();
             $table->string('document_name', 30)->nullable();
             $table->string('supplier', 20)->nullable()->index();
+            $table->string('branch', 20)->nullable();
             $table->string('supplier_name', 255)->nullable();
             $table->decimal('subtotal', 20, 2)->nullable();
             $table->decimal('vatvalue', 20, 2)->nullable();

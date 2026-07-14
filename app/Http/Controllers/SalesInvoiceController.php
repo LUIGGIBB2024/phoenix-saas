@@ -441,8 +441,8 @@ class SalesInvoiceController extends Controller
 
         $ventas = SalesInvoice::select(
             'id',
-            'date_issue',
-            'expiration_date',
+            //'date_issue',
+            //'expiration_date',
             'number',
             'prefix',
             'document_name',
@@ -460,6 +460,9 @@ class SalesInvoiceController extends Controller
             'cufe',
             'state'
         )
+            // Forzamos el formato YYYY-MM-DD para las fechas
+            ->selectRaw("DATE_FORMAT(sales_invoices.date_issue, '%Y-%m-%d') as date_issue")
+            ->selectRaw("DATE_FORMAT(sales_invoices.expiration_date, '%Y-%m-%d') as expiration_date")
             ->selectRaw('total_sale - cost_of_sale as rentabilidad, ((total_sale - cost_of_sale) / total_sale) * 100 as margen')
             ->whereBetween('date_issue', [$desdefecha, $hastafecha])
             ->where('companies_id', $request->input('company_id'))

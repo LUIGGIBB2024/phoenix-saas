@@ -890,9 +890,9 @@ const headers = [
         md="2"
         class="d-flex align-left flex-column"
       >
-        <h3 class="text-primary mb-2">
+        <h4 class="text-primary mb-2">
           Mantenimiento de Clientes
-        </h3>
+        </h4>
         <VCardText class="d-flex align-center flex-wrap gap-4 pa-0">
           <VTextField
             v-model="searchQuery"

@@ -22,6 +22,7 @@ class PurchasesInvoice extends Model
         'prefix',
         'document_name',
         'supplier',
+        'branch',
         'supplier_name',
         'total_purchase',
         'discounts',

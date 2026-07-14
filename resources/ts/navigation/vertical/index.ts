@@ -118,7 +118,7 @@ const menu_super: NavItem_Saas[] = [
       { title: 'Consultar Facturación', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', icon: { icon: 'tabler-cash', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Egresos', icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+      { title: 'Egresos', to: { name: 'egresos' }, icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Movto de Inventarios', to: { name: 'inventories' }, icon: { icon: 'tabler-basket-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
 
     ],
@@ -177,7 +177,7 @@ const menu_ope: NavItem_Saas[] = [
       { title: 'Consultar Facturación', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', icon: { icon: 'tabler-cash', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Egresos', icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+      { title: 'Egresos', to: { name: 'egresos' }, icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Movto de Inventarios', to: { name: 'inventories' }, icon: { icon: 'tabler-basket-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
 
     ],

@@ -44,7 +44,6 @@ const searchQuery = ref('')
 const selectedRows = ref([])
 const costoActual = ref(0)
 const newregistro = ref(0)
-const id_registro_compras = ref(0)
 
 newregistro.value = 0
 
@@ -332,30 +331,15 @@ const snackbarColor = ref('success')
 
 const responseData = ref({
   data: [],
-  docspurchases: [],
-  docsinputsoutputs: [],
-  suppliers: [],
-  cptpurchases: [],
-  cptes: [],
-  dctoscxp: [],
-  products: [],
-  purchase: [],
-  concept_name: '',
-  totaldocument: 0,
+  payments: [],
+  totaldocumentos: 0,
   page: 1,
   per_page: 10,
-  totaldctos: 0,
 })
 
 // 🔹 Diálogo de confirmación de eliminación
-const documents = ref([])
-const docs_purchases = ref([])
-const docs_inputs_outputs = ref([])
+const payments = ref([])
 const suppliers = ref([])
-const cptpurchases = ref<Concept[]>([])
-const cptes = ref([])
-const dctoscxp = ref([])
-const products = ref([])
 
 const nameRecordToDelete = ref('')
 const showConfirmDialog = ref(false)
@@ -559,7 +543,7 @@ watch(showDialog, isOpen => {
 
 const loadInfo = async () => {
   try {
-    const response = await axios.get('/api/getdocuments', {
+    const response = await axios.get('/api/getsupplierpayments', {
       params: {
         q: searchQuery.value,
         itemsPerPage: itemsPerPage.value,
@@ -575,19 +559,19 @@ const loadInfo = async () => {
 
     responseData.value = response.data
 
-    documents.value = responseData.value.data
+    payments.value = responseData.value.data
 
-    // eslint-disable-next-line camelcase
-    docs_purchases.value = responseData.value.docspurchases
-    // eslint-disable-next-line camelcase
-    docs_inputs_outputs.value = responseData.value.docsinputsoutputs
-    suppliers.value = responseData.value.suppliers
+    // // eslint-disable-next-line camelcase
+    // docs_purchases.value = responseData.value.docspurchases
+    // // eslint-disable-next-line camelcase
+    // docs_inputs_outputs.value = responseData.value.docsinputsoutputs
+    // suppliers.value = responseData.value.suppliers
 
-    cptpurchases.value = responseData.value.cptpurchases
-    products.value = responseData.value.products
+    // cptpurchases.value = responseData.value.cptpurchases
+    // products.value = responseData.value.products
 
-    cptes.value = responseData.value.cptes
-    dctoscxp.value = responseData.value.dctoscxp
+    // cptes.value = responseData.value.cptes
+    // dctoscxp.value = responseData.value.dctoscxp
   }
   catch (error) {
     console.error('Error al intentar enviar correo :', error)
@@ -638,7 +622,7 @@ const dctoscxpInfo = ref<Dctoscxp | null>(null)
 const totalRecords = computed(() => responseData.value?.totaldocument ?? 0)
 
 const infoData = computed(() => {
-  const data = responseData.value.data ?? []
+  const data = responseData.value.payments ?? []
 
   // console.log('Soy Data 001 - 999 : ', JSON.parse(JSON.stringify(data)))
 
@@ -675,6 +659,8 @@ const saveRecordCompras = async () => {
       headers: { Authorization: `Bearer ${token}` },
     })
 
+    const updatedRecord = response.data.purchase
+
     const compraRecibida = response.data.purchase
     const conceptNameRecibido = response.data.concept_name ?? ''
 
@@ -685,22 +671,44 @@ const saveRecordCompras = async () => {
     }
 
     // ✅ USAMOS REASIGNACIÓN PARA FORZAR LA REACTIVIDAD
-    // if (newRecordCargue.value.id) {
+    if (newRecord.value.id) {
     // MODO EDICIÓN: Creamos un nuevo array con el elemento modificado
+      responseData.value.data = responseData.value.data.map((item: any) =>
+        item.id === newRecord.value.id ? registroActualizado : item,
+      )
+    }
+    else {
+    // MODO CREACIÓN: Creamos un nuevo array con el nuevo elemento al principio
+      responseData.value.data = [registroActualizado, ...responseData.value.data]
 
-    console.log('Soy Response Data:', responseData.value.data)
-    console.log('Soy Id Newrecord:', newRecord.value.id)
-    responseData.value.data = responseData.value.data.map((item: any) =>
-      item.id === recordComprasT.value.id ? registroActualizado : item,
-    )
+      // Actualizamos el contador total si lo usas
+      responseData.value.totaldocument += 1
+    }
 
+    // // 1. Aseguramos que el array exista
+    // if (!responseData.value.data)
+    //   responseData.value.data = []
+
+    // // 2. Buscamos si el registro ya existe en la lista
+    // const index = responseData.value.data.findIndex(item => item.id === updatedRecord.id)
+
+    // if (index !== -1) {
+    // // ✅ MODO EDICIÓN: Actualizamos usando map para garantizar reactividad
+    //   responseData.value.data = responseData.value.data.map((item, i) =>
+    //     i === index ? { ...updatedRecord } : item,
+    //   )
+    //   console.log('Registro actualizado en la lista')
     // }
-    // // else {
-    // // MODO CREACIÓN: Creamos un nuevo array con el nuevo elemento al principio
-    //   responseData.value.data = [registroActualizado, ...responseData.value.data]
+    // else {
+    // // ✅ MODO CREACIÓN: ¡Aquí estaba el error!
+    // // Debes usar responseData.value.data, NO infoData.value
+    //   responseData.value.data = [{ ...updatedRecord }, ...responseData.value.data]
 
-    //   // Actualizamos el contador total si lo usas
-    //   responseData.value.totaldocument += 1
+    //   // Si tienes un contador total, increméntalo
+    //   if (responseData.value.totaldocument !== undefined) {
+    //     responseData.value.totaldocument++
+    //   }
+    //   console.log('Nuevo registro insertado al inicio de la lista')
     // }
 
     Limpiar_RegCargue()
@@ -1290,8 +1298,8 @@ const productHeaders = [
 const headers = [
   { title: '#', key: 'id', width: 50 },
   { title: 'Fecha', key: 'report_date', sortable: true, width: 95 }, // Espacio justo para "AAAA-MM-DD"
-  { title: 'Consecut.', key: 'number', sortable: true, width: 70, align: 'end' },
-  { title: '#Factura', key: 'purchase_invoice', sortable: true, width: 70, align: 'end' },
+  { title: 'Consecut.', key: 'consecutive', sortable: true, width: 70, align: 'end' },
+  { title: 'Dcto', key: 'document', sortable: true, width: 70, align: 'end' },
 
   // A estas dos NO les pongas width para que absorban el espacio flexible y puedan hacer salto de línea
   { title: 'Descripción', key: 'concept_name', sortable: true },
@@ -1304,14 +1312,10 @@ const headers = [
     headerProps: { class: 'd-none d-lg-table-cell' },
   },
   { title: 'Nombre del Tercero', key: 'name', sortable: true },
+  { title: 'Tipo de Egreso', key: 'payment_type', sortable: true },
 
   // Columnas numéricas con un ancho fijo prudente
-  { title: 'SubTotal', key: 'subtotal', sortable: true, width: 80, aling: 'end' },
-  { title: 'ValorIva', key: 'vatvalue', sortable: true, width: 70, aling: 'end' },
-  { title: 'Desctos', key: 'descuentos', sortable: true, width: 70, aling: 'end' },
-  { title: 'Retenc.', key: 'retenciones', sortable: true, width: 70, aling: 'end' },
-  { title: 'Total', key: 'total_purchases', sortable: true, width: 110, aling: 'end' },
-
+  { title: 'Valor Egreso', key: 'value_cxp', sortable: true, width: 80, aling: 'end' },
   { title: 'Estado', key: 'state', sortable: true, width: 90 },
   { title: 'Acciones', key: 'actions', sortable: false, width: 120, aling: 'center' }, // Espacio optimizado para tus 3 IconBtn compactos
 ]
@@ -1323,11 +1327,11 @@ const headers = [
     <VRow class="align-center">
       <VCol
         cols="12"
-        md="8"
+        md="10"
         class="d-flex align-left flex-column"
       >
         <h4 class="text-primary mb-2">
-          Movimientos de Inventarios
+          Movimientos de Egresos
           <span>
             : (<strong class="text-success">{{ process_year }}</strong>)
           </span>
@@ -1348,12 +1352,12 @@ const headers = [
 
       <VCol
         cols="12"
-        md="4"
-        class="d-flex justify-space-around justify-md-end align-center gap-8 mt-4 mt-md-0"
+        md="2"
+        class="d-flex justify-space-around  align-center gap-8 mt-4 mt-md-0"
       >
         <div class="d-flex flex-column align-center">
           <VTooltip
-            text="Ingresar Compras"
+            text="Pagos de Facturas"
             location="top"
           >
             <template #activator="{ props }">
@@ -1365,6 +1369,7 @@ const headers = [
                 icon
                 class="mb-1"
                 style="background-color: #3903fc !important; color: #fff;"
+                readonly
                 @click="openCreateDialog"
               >
                 <VIcon
@@ -1374,7 +1379,7 @@ const headers = [
               </VBtn>
             </template>
           </VTooltip>
-          <span style="font-family: tahoma, verdana, sans-serif !important; font-size: 11px;">Compras</span>
+          <span style="font-family: tahoma, verdana, sans-serif !important; font-size: 11px;">Pagos de Facturas</span>
         </div>
 
         <div
@@ -1382,7 +1387,7 @@ const headers = [
           style="margin-inline-start: 24px;"
         >
           <VTooltip
-            text="Ingresar Entradas Y Salidas"
+            text="Otros Pagos"
             location="top"
           >
             <template #activator="{ props }">
@@ -1404,37 +1409,7 @@ const headers = [
               </VBtn>
             </template>
           </VTooltip>
-          <span style="font-family: tahoma, verdana, sans-serif !important; font-size: 11px;">Entradas/Salidas</span>
-        </div>
-
-        <div
-          class="d-flex flex-column align-center"
-          style="margin-inline-start: 24px;"
-        >
-          <VTooltip
-            text="Ingresar Devolución a Proveedores"
-            location="top"
-          >
-            <template #activator="{ props }">
-              <VBtn
-                v-bind="props"
-                color="white"
-                width="40"
-                height="40"
-                icon
-                class="mb-1"
-                style="background-color: rgb(19, 187, 69) !important; color: #fff;"
-                readonly
-                @click="openCreateDialog"
-              >
-                <VIcon
-                  icon="tabler-plus"
-                  size="30"
-                />
-              </VBtn>
-            </template>
-          </VTooltip>
-          <span style="font-family: tahoma, verdana, sans-serif !important; font-size: 11px;">DevProv</span>
+          <span style="font-family: tahoma, verdana, sans-serif !important; font-size: 11px;">Otros Pagos</span>
         </div>
       </VCol>
     </VRow>
@@ -1463,79 +1438,79 @@ const headers = [
         @update:options="updateOptions"
       >
         <template #item.id="{ item }">
-          <div class="cell-wrap text-column">
+          <div class="cell-wrap columna_name">
             {{ item.id }}
           </div>
         </template>
 
         <template #item.report_date="{ item }">
-          <div class="text-column">
+          <div class="cell-wrap text-no-wrap columna_name">
             {{ item.report_date }}
           </div>
         </template>
 
         <template #item.number="{ item }">
-          <div class="cell-wrap text-no-wrap text-column">
+          <div class="cell-wrap text-no-wrap columna_name">
             {{ item.number }}
           </div>
         </template>
 
         <template #item.concept_name="{ item }">
-          <div class="cell-wrap text-no-wrap text-column">
+          <div class="cell-wrap text-no-wrap columna_name">
             {{ item.concept_name }}
           </div>
         </template>
 
         <template #item.purchase_invoice="{ item }">
-          <div class="cell-wrap text-no-wrap text-column">
+          <div class="cell-wrap text-no-wrap columna_name">
             {{ item.purchase_invoice }}
           </div>
         </template>
 
         <template #item.nit="{ item }">
-          <div class="cell-wrap text-column">
+          <div class="cell-wrap columna_name">
             {{ item.nit }}
           </div>
         </template>
 
         <template #item.name="{ item }">
-          <div class="cell-wrap text-column text-no-wrap">
+          <div class="cell-wrap columna_name2 text-no-wrap">
             {{ item.name }}
           </div>
         </template>
 
         <template #item.subtotal="{ item }">
-          <div class="cell-wrap text-column text-right">
+          <div class="cell-wrap columna_name text-right">
             {{ formatCurrency(item.subtotal, 0) }}
           </div>
         </template>
 
         <template #item.vatvalue="{ item }">
-          <div class="cell-wrap text-column text-right">
+          <div class="cell-wrap columna_name text-right">
             {{ formatCurrency(item.vatvalue, 0) }}
           </div>
         </template>
 
         <template #item.descuentos="{ item }">
-          <div class="cell-wrap text-column text-right">
+          <div class="cell-wrap columna_name text-right">
             {{ formatCurrency(item.descuentos, 0) }}
           </div>
         </template>
 
         <template #item.retenciones="{ item }">
-          <div class="cell-wrap text-column text-right">
+          <div class="cell-wrap columna_name text-right">
             {{ formatCurrency(item.retenciones, 0) }}
           </div>
         </template>
 
         <template #item.total_purchases="{ item }">
-          <div class="cell-wrap text-column text-right">
+          <div class="cell-wrap columna_name text-right">
             {{ formatCurrency(item.total_purchases, 0) }}
           </div>
         </template>
 
         <template #item.state="{ item }">
-          <div class="cell-wrap text-column">
+          <div class="cell-wrap columna_name">
             {{ item.state }}
           </div>
         </template>
@@ -3226,10 +3201,4 @@ textarea {
   --v-table-row-height: 15px !important;
   --v-table-header-height: 30px !important;
 }
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
- .text-column {
-   font-family: italic, sans-serif;
-   font-size: 0.68rem;
- }
 </style>

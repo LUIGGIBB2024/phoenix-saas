@@ -17,6 +17,11 @@ const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
+const tableKey = ref(0)
+
+const forceRefresh = () => {
+  tableKey.value += 1
+}
 
 const hoy = new Date().toISOString().split('T')[0]
 

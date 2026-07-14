@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="notranslate" translate="no">
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" href="{{ asset('favicon.ico') }}" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 1. Meta etiqueta específica para forzar a Google Chrome a NO traducir -->
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"  />
   <title>Phoenix24 SaaS 2026</title>
   {{--  <title>Enlace Visual 2026</title>  --}}
   <link rel="stylesheet" type="text/css" href="{{ asset('loader.css') }}" />

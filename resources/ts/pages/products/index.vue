@@ -676,9 +676,9 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
         md="2"
         class="d-flex align-left flex-column"
       >
-        <h3 class="text-primary mb-2">
+        <h5 class="text-primary mb-2">
           Mantenimiento de Productos
-        </h3>
+        </h5>
         <VCardText class="d-flex align-center flex-wrap gap-4 pa-0">
           <VTextField
             v-model="searchQuery"

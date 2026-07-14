@@ -12,15 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('unit_measures', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 250)->nullable();
-            $table->string('code', 20)->nullable();
-            $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
-            $table->string('usercreate', 20)->nullable()->default('System');
-            $table->string('userupdate', 20)->nullable()->default('System');
-        });
+        if (!Schema::hasTable('unit_measures')) {
+            Schema::create('unit_measures', function (Blueprint $table) {
+                $table->id();
+                $table->string('name', 250)->nullable();
+                $table->string('code', 20)->nullable();
+                $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+                $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
+                $table->string('usercreate', 20)->nullable()->default('System');
+                $table->string('userupdate', 20)->nullable()->default('System');
+            });
+        }
     }
 
     /**
