@@ -1295,9 +1295,8 @@ if (producto)
                     rounded="lg"
                     height="30"
                     :loading="guardando"
-                  >
                     @click="guardarFactura"
-                    >
+                  >
                     <template #loader>
                       <span class="custom-loader">
                         <VIcon icon="mdi-cached" />
