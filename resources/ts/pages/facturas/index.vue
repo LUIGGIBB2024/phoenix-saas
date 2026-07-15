@@ -1290,7 +1290,7 @@ if (producto)
 
                   <!-- Botón Guardar factura (con estado de carga) :disabled="!puedeGuardar || guardando" -->
                   <VBtn
-                    color="indigo"
+                    class="btn-guardar-custom"
                     size="small"
                     rounded="lg"
                     height="30"
@@ -1682,6 +1682,21 @@ if (producto)
 /* stylelint-disable-next-line no-duplicate-selectors */
 .custom-table tbody tr:hover {
   background-color: #eee !important;
+}
+
+/* Estilo para el botón */
+.btn-guardar-custom {
+  background-color: #4f46e5 !important; /* Fondo Índigo */
+}
+
+/* Forzar el color del texto interno */
+.btn-guardar-custom :deep(.v-btn__content) {
+  color: #c7f816 !important; /* Texto Verde Limón */
+}
+
+/* Forzar el color del icono interno */
+.btn-guardar-custom :deep(.v-icon) {
+  color: #c7f816 !important; /* Icono Verde Limón */
 }
 </style>
 

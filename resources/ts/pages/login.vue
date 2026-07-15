@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import axios from 'axios'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import axios from 'axios'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
@@ -49,6 +49,88 @@ const authThemeImg = useGenerateImageVariant(
 const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
 
 // --- Función de Login ---
+// const handleLogin = async () =>
+// {
+//   errorMessage.value = ''
+//   isLoading.value = true
+
+//   try {
+//     if (!form.value.email || !form.value.password) {
+//       errorMessage.value = 'Debes ingresar tu correo y contraseña.'
+//       isLoading.value = false
+
+//       return
+//     }
+
+//     const { data } = await axios.post('/api/login', {
+//       email: form.value.email,
+//       password: form.value.password,
+//     })
+
+//     console.log('Login exitoso:', data)
+//     console.log('Login exitoso:', data)
+
+//     const url_token_info = ref('Not Info')
+
+//     // ✅ 1. Limpiar TODO el localStorage antes de escribir la nueva sesión
+//     //       Esto evita que queden residuos de la sesión anterior
+//     localStorage.clear()
+
+//     // ✅ 2. Escribir los nuevos valores
+//     localStorage.setItem('auth_token', data.token)
+//     localStorage.setItem('company_token', data.token)
+//     localStorage.setItem('company_name', data.company_name)
+//     localStorage.setItem('user_name', data.user_name)
+//     localStorage.setItem('user_id', data.user_id)
+//     localStorage.setItem('company_id', data.company_id)
+//     localStorage.setItem('url_n8n', data.url_n8n)
+//     localStorage.setItem('nit_empresa', data.nit_empresa)
+//     localStorage.setItem('representante_legal', data.representante_legal)
+//     localStorage.setItem('tipo_de_usuario', data.user.type)
+//     localStorage.setItem('company_token', data.company_token)
+//     localStorage.setItem('process_year', '2026')
+
+//     window.company_user = data.company_name
+
+//     const tipoUsuario = data.user.type // ✅ 3. Leer directo de `data`, NO de localStorage
+
+//     console.log('🧭 Tipo usuario:', tipoUsuario)
+//     console.log('🧭 Añpr Proceso:', localStorage.getItem('process_year'))
+
+//     // ✅ 4. Usar await en router.push para asegurarse que la navegación
+//     //       ocurra DESPUÉS de que todo lo anterior esté listo
+
+//     if (tipoUsuario === 'SuperAdmin')
+//       window.location.href = '/dashboard' // ← recarga completa, limpia todo
+//     else if (tipoUsuario === 'Cliente SaaS')
+//       window.location.href = '/dashboard-saas'
+//     else if (tipoUsuario === 'Cliente Phx')
+//       window.location.href = '/dashboard-saas'
+//     else if (tipoUsuario === 'Operador')
+//       window.location.href = '/dashboard-saas'
+
+//     // if (tipoUsuario === 'SuperAdmin') {
+//     //   await router.push({ name: 'dashboard' })
+//     // } else if (tipoUsuario === 'Cliente SaaS') {
+//     //   await router.push({ name: 'dashboard-saas' })
+//     // } else if (tipoUsuario === 'Cliente Phx') {
+//     //   await router.push({ name: 'dashboard-saas' })
+//     // } else {
+//     //   // ✅ 5. Manejar tipo de usuario desconocido
+//     //   console.warn('Tipo de usuario no reconocido:', tipoUsuario)
+//     //   errorMessage.value = 'Tipo de usuario no válido.'
+//     // }
+//   }
+//   catch (error: any) {
+//     errorMessage.value = error.response?.data?.message || 'Credenciales incorrectas. Intenta de nuevo.'
+//     console.log('Soy Error:', errorMessage.value)
+//   }
+//   finally {
+//     isLoading.value = false
+//   }
+// }
+
+// --- Función de Login ---
 const handleLogin = async () => {
   errorMessage.value = ''
   isLoading.value = true
@@ -67,17 +149,12 @@ const handleLogin = async () => {
     })
 
     console.log('Login exitoso:', data)
-    console.log('Login exitoso:', data)
-
-    const url_token_info = ref('Not Info')
 
     // ✅ 1. Limpiar TODO el localStorage antes de escribir la nueva sesión
-    //       Esto evita que queden residuos de la sesión anterior
     localStorage.clear()
 
-    // ✅ 2. Escribir los nuevos valores
+    // ✅ 2. Escribir los nuevos valores de forma limpia
     localStorage.setItem('auth_token', data.token)
-    localStorage.setItem('company_token', data.token)
     localStorage.setItem('company_name', data.company_name)
     localStorage.setItem('user_name', data.user_name)
     localStorage.setItem('user_id', data.user_id)
@@ -86,43 +163,30 @@ const handleLogin = async () => {
     localStorage.setItem('nit_empresa', data.nit_empresa)
     localStorage.setItem('representante_legal', data.representante_legal)
     localStorage.setItem('tipo_de_usuario', data.user.type)
-    localStorage.setItem('company_token', data.company_token)
+    localStorage.setItem('company_token', data.company_token) // Corregido: ya no se duplica con data.token
     localStorage.setItem('process_year', '2026')
 
     window.company_user = data.company_name
 
-    const tipoUsuario = data.user.type // ✅ 3. Leer directo de `data`, NO de localStorage
+    const tipoUsuario = data.user.type
 
     console.log('🧭 Tipo usuario:', tipoUsuario)
-    console.log('🧭 Añpr Proceso:', localStorage.getItem('process_year'))
 
-    // ✅ 4. Usar await en router.push para asegurarse que la navegación
-    //       ocurra DESPUÉS de que todo lo anterior esté listo
-
-    if (tipoUsuario === 'SuperAdmin')
-      window.location.href = '/dashboard' // ← recarga completa, limpia todo
-    else if (tipoUsuario === 'Cliente SaaS')
+    // ✅ 3. Redirección limpia según el tipo de usuario
+    if (tipoUsuario === 'SuperAdmin') {
+      window.location.href = '/dashboard'
+    }
+    else if (['Cliente SaaS', 'Cliente Phx', 'Operador'].includes(tipoUsuario)) {
       window.location.href = '/dashboard-saas'
-    else if (tipoUsuario === 'Cliente Phx')
-      window.location.href = '/dashboard-saas'
-    else if (tipoUsuario === 'Operador')
-      window.location.href = '/dashboard-saas'
-
-    // if (tipoUsuario === 'SuperAdmin') {
-    //   await router.push({ name: 'dashboard' })
-    // } else if (tipoUsuario === 'Cliente SaaS') {
-    //   await router.push({ name: 'dashboard-saas' })
-    // } else if (tipoUsuario === 'Cliente Phx') {
-    //   await router.push({ name: 'dashboard-saas' })
-    // } else {
-    //   // ✅ 5. Manejar tipo de usuario desconocido
-    //   console.warn('Tipo de usuario no reconocido:', tipoUsuario)
-    //   errorMessage.value = 'Tipo de usuario no válido.'
-    // }
+    }
+    else {
+      console.warn('Tipo de usuario no reconocido:', tipoUsuario)
+      errorMessage.value = 'Tu tipo de usuario no tiene un panel asignado.'
+    }
   }
   catch (error: any) {
     errorMessage.value = error.response?.data?.message || 'Credenciales incorrectas. Intenta de nuevo.'
-    console.log('Soy Error:', errorMessage.value)
+    console.error('Error en Login:', errorMessage.value)
   }
   finally {
     isLoading.value = false

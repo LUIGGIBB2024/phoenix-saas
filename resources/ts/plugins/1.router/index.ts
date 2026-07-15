@@ -38,29 +38,58 @@ setTimeout(() => {
   router.getRoutes().forEach(r => console.log('📍 Ruta:', r.name, r.path))
 }, 1000)
 
-router.beforeEach((to, from, next) => {
-  console.log('🔁 Guard | path:', to.path, '| token:', localStorage.getItem('auth_token'))
+// router.beforeEach((to, from, next) => {
+//   console.log('🔁 Guard | path:', to.path, '| token:', localStorage.getItem('auth_token'))
 
+//   const token = localStorage.getItem('auth_token')
+//   const tipoUsuario = localStorage.getItem('tipo_de_usuario')
+
+//   if (to.path === '/') {
+//     next('/login')                    // ✅ usar path, no name
+//   }
+//   else if (!token && to.path !== '/login') {
+//     next('/login')
+//   }
+//   else if (token && to.path === '/login') {
+//     if (tipoUsuario === 'SuperAdmin')
+//       next('/dashboard')              // ✅ nombre real de la ruta
+//     else if (tipoUsuario === 'Cliente SaaS')
+//       next('/dashboard-saas')        // ✅ nombre real de la ruta
+//     else
+//       next('/dashboard')
+//   }
+//   else {
+//     next()
+//   }
+// })
+
+router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('auth_token')
   const tipoUsuario = localStorage.getItem('tipo_de_usuario')
 
-  if (to.path === '/') {
-    next('/login')                    // ✅ usar path, no name
-  }
-  else if (!token && to.path !== '/login') {
-    next('/login')
-  }
-  else if (token && to.path === '/login') {
+  // 1. Si no está logueado y la ruta no es pública, mandarlo al login
+  if (!token && !to.meta.public)
+    return next({ name: 'login' }) // o la ruta de tu login
+
+  // 2. Si el usuario ya está logueado e intenta ir a la raíz "/" o al login
+  if (token && (to.path === '/' || to.name === 'login')) {
     if (tipoUsuario === 'SuperAdmin')
-      next('/dashboard')              // ✅ nombre real de la ruta
-    else if (tipoUsuario === 'Cliente SaaS')
-      next('/dashboard-saas')        // ✅ nombre real de la ruta
-    else
-      next('/dashboard')
+      return next('/dashboard')
+    else if (['Cliente SaaS', 'Cliente Phx', 'Operador'].includes(tipoUsuario || ''))
+      return next('/dashboard-saas')
   }
-  else {
-    next()
+
+  // 3. Proteger la ruta del SuperAdmin de otros roles
+  if (to.path.startsWith('/dashboard') && !to.path.startsWith('/dashboard-saas')) {
+    if (tipoUsuario !== 'SuperAdmin')
+      return next('/dashboard-saas') // Redirigir operadores y clientes a su dashboard correcto
   }
+
+  // 4. Proteger la ruta SaaS de los SuperAdmin (opcional)
+  if (to.path.startsWith('/dashboard-saas') && tipoUsuario === 'SuperAdmin')
+    return next('/dashboard')
+
+  next()
 })
 
 export default function (app: App) {
