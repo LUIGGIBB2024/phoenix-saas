@@ -268,6 +268,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'egresos-vdialogs-crear-egresos-dialog': RouteRecordInfo<
+      'egresos-vdialogs-crear-egresos-dialog',
+      '/egresos/vdialogs/CrearEgresosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'facturas': RouteRecordInfo<
       'facturas',
       '/facturas',
@@ -642,6 +649,12 @@ declare module 'vue-router/auto-routes' {
     'resources/ts/pages/egresos/index.vue': {
       routes:
         | 'egresos'
+      views:
+        | never
+    }
+    'resources/ts/pages/egresos/vdialogs/CrearEgresosDialog.vue': {
+      routes:
+        | 'egresos-vdialogs-crear-egresos-dialog'
       views:
         | never
     }

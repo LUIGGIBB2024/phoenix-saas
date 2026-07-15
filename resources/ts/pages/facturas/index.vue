@@ -746,6 +746,9 @@ if (producto)
                               <span class="text-primary font-weight-bold">
                                 {{ formatoMoneda(item.raw.price) }}
                               </span>
+                              <span class="text-error font-weight-bold">
+                                Cst: {{ formatoMoneda(item.raw.cost) }}
+                              </span>
                             </template>
                           </VListItem>
                         </template>
@@ -1285,16 +1288,16 @@ if (producto)
                     Imprimir / PDF
                   </VBtn>
 
-                  <!-- Botón Guardar factura (con estado de carga) -->
+                  <!-- Botón Guardar factura (con estado de carga) :disabled="!puedeGuardar || guardando" -->
                   <VBtn
                     color="indigo"
                     size="small"
                     rounded="lg"
                     height="30"
-                    :disabled="!puedeGuardar || guardando"
                     :loading="guardando"
-                    @click="guardarFactura"
                   >
+                    @click="guardarFactura"
+                    >
                     <template #loader>
                       <span class="custom-loader">
                         <VIcon icon="mdi-cached" />
