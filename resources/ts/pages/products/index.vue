@@ -653,6 +653,7 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
 
   return { formattedValue, onlyNumbersAndDot, isFocused }
 }// Instancias la función para cada campo de tu formulario
+
 const taxField = useNumericField(newRecord, 'consumption_tax')
 const renField = useNumericField(newRecord, 'profitability')
 const stckminField = useNumericField(newRecord, 'minimum_stocky')

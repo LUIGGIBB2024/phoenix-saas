@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\ControlConsecutive;
 use App\Models\GeneralDocument;
 use App\Models\InventoryBalance;
 use App\Models\InventoryConcept;
@@ -104,31 +105,46 @@ class InventoryDocumentController extends Controller
         $companyId  = $request->input('company_id');
         $tipodcto   = $request->input('documento_purchase');
         $concepto   = $request->input('concept_inv');
+        $tipodocument   = $request->input('typereal');
         $cpto   = InventoryConcept::where('code', $concepto)->where('companies_id', $companyId)->first();
         $conceptname = $cpto->name;
 
-        $numerofactura = 0;
-
-        $documento = GeneralDocument::where('companies_id', $companyId)
-            ->where('type', 'Proveedores')
-            ->where('typedocument2', 'Compras')
-            ->where('typedocument3', 'Causaciones')
-            ->where('code', $tipodcto)
-            ->where('state', 'Activo')
-            ->first();
-
-
-        if ($documento) {
-
-            // Incrementamos el campo 'consecutive' en 1 en la base de datos y en el objeto actual
-            $documento->increment('consecutive');
-
-            // Asignamos el valor actualizado a tu variable
-            $numerofactura = $documento->consecutive;
-        } else {
-            // Manejo de error en caso de que no se encuentre el documento configurado
-            throw new \Exception("No se encontró una configuración de documento activo para los parámetros internos.");
+        $numconsecutive = 0;
+        switch ($tipodocument) {
+            case 'Compras':
+                $numconsecutive = ControlConsecutive::getNextConsecutive('COMPRAS', $companyId, "");
+                break;
+            case 'Otras Entradas':
+                $numconsecutive = ControlConsecutive::getNextConsecutive('OTRASENT', $companyId, "");
+                break;
+            case 'Otras Salidas':
+                $numconsecutive = ControlConsecutive::getNextConsecutive('OTRASSAL', $companyId, "");
+                break;
+            case 'Dev Proveedores':
+                $numconsecutive = ControlConsecutive::getNextConsecutive('DEVPRO', $companyId, "");
+                break;
         }
+        // $numerofactura = $numconsecutive;
+
+        // $documento = GeneralDocument::where('companies_id', $companyId)
+        //     ->where('type', 'Proveedores')
+        //     ->where('typedocument2', 'Compras')
+        //     ->where('typedocument3', 'Causaciones')
+        //     ->where('code', $tipodcto)
+        //     ->where('state', 'Activo')
+        //     ->first();
+
+        // if ($documento) {
+
+        //     // Incrementamos el campo 'consecutive' en 1 en la base de datos y en el objeto actual
+        //     $documento->increment('consecutive');
+
+        //     // Asignamos el valor actualizado a tu variable
+        //     $numerofactura = $documento->consecutive;
+        // } else {
+        //     // Manejo de error en caso de que no se encuentre el documento configurado
+        //     throw new \Exception("No se encontró una configuración de documento activo para los parámetros internos.");
+        // }
 
         // Validamos los datos entrantes
         $data = $request->validate([
@@ -177,8 +193,9 @@ class InventoryDocumentController extends Controller
         ]);
 
         $data['companies_id']   = $companyId;
-        $data['number']         = $numerofactura;
+        $data['number']         = $numconsecutive;
         $data['state']          = 'Pendiente';
+        $data['type']           = $cpto->documents;
 
         $purchase = \App\Models\InventoryDocument::create($data);
 
@@ -416,6 +433,61 @@ class InventoryDocumentController extends Controller
         return response()->json([
             'message' => 'Compra Creada Exitosamente',
             'compras' => $compras,
+
+        ], 201, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getDetDocuments(Request $request): JsonResponse
+    {
+        //dd($request);
+        $companyId  = $request->input('company_id');
+        $documento  = $request['document'];
+        $iddocument = $documento['id'];
+
+        $detalle    = InventoryMovement::select(
+            'id',
+            'code',
+            'name',
+            'store',
+            'batch',
+            'report_date',
+            'number',
+            'prefix',
+            'concept_inv',
+            'concept_class',
+            'nit',
+            'nit2',
+            'branch',
+            'health_batch',
+            'plate',
+            'serial',
+            'amount',
+            'amount1',
+            'vat',
+            'discount1',
+            'discount2',
+            'discount3',
+            'unit_cost',
+            'sale_price',
+            'parcial_value',
+            'type',
+            'idregister',
+            'state',
+            'state01',
+            'state02',
+            'state03',
+            'companies_id',
+            'inventory_documents_id',
+        )
+            ->selectRaw("round(amount * unit_cost,0) as subtotal")
+            ->where('companies_id',  $companyId)
+            ->where('inventory_documents_id', $iddocument)
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'message' => 'Compra Creada Exitosamente',
+            'details' => $detalle,
 
         ], 201, [], JSON_UNESCAPED_UNICODE);
     }

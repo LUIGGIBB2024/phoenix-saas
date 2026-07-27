@@ -17,9 +17,33 @@ return new class extends Migration
             $table->string('name', 255)->nullable();
             $table->string('center', 20)->nullable();
             $table->string('scenter', 20)->nullable();
+            $table->enum('type', [
+                'FactContado',
+                'FactCrédito',
+                'NotaCrédito',
+                'NotaCréditoVlr',
+                'NotaCréditoVlrNoFact',
+                'NotaDébito',
+                'Compras',
+                'OtrasEnt',
+                'OtrasSal',
+                'DevProv',
+                'TrasladInv',
+                'EgresosFact',
+                'EgresosOtr',
+                'Causac',
+                'RecCajaFact',
+                'RecCajaOtr',
+                'Requisiciones',
+                'OrdenProd',
+                'CompraActivos',
+                'Remisiones'
+            ])->nullable()->default('No Aplica');
 
+            $$table->unsignedBigInteger('companies_id')->index()->nullable();
             $table->unsignedBigInteger('companies_id')->index()->nullable();
             $table->foreign('companies_id')->references('id')->on('companies')->onDelete('set null');
+
             $table->index(['companies_id', 'id'], 'idx_companies_id');
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

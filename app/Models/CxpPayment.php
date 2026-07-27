@@ -55,6 +55,11 @@ class CxpPayment extends Model
         return $this->hasMany(DetailCxpPayment::class, 'cxp_payment_id', 'id');
     }
 
+    public function detailsinvoices(): HasMany
+    {
+        return $this->hasMany(DetailCxpPayment::class, 'purchases_invoice_id', 'id');
+    }
+
     // Relación uno a muchos
     public function detailsothers(): HasMany
     {

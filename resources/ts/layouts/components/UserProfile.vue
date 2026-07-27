@@ -148,7 +148,7 @@ const handleLogout = () => {
             style="cursor: pointer;"
             @click="handleLogout"
           >
-            Logout
+            Cerrar Sesión
           </VListItem>
 
           <!-- <VListItemTitle>Logout</VListItemTitle> -->

@@ -509,14 +509,13 @@ const facturarInfo = async (factura: Factura) => {
       company_id: localStorage.getItem('company_id'),
       process_year: localStorage.getItem('process_year'),
       tipo_documento: docTipo.value,
-      payment_methods: PaymentsMethod.value.id,
-    },
-    {
-    // El tercer argumento es la configuración (Headers, etc.)
+      payment_methods: PaymentsMethod.value.code,
       headers: { Authorization: `Bearer ${token}` },
     })
 
     responseData.value = response.data
+
+    // El tercer argumento es la configuración (Headers, et
   }
   catch (error) {
     console.error('Error al intentar enviar correo :', error)

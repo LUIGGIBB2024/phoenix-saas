@@ -1,9 +1,25 @@
 <script setup lang="ts">
 import axios from 'axios'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { VIcon } from 'vuetify/components'
 import { VCard, VCardText } from 'vuetify/components/VCard'
 import { VCol } from 'vuetify/components/VGrid'
+import type { CxPPayment } from './components/CrearEgresosDialog.vue' // Ajusta la ruta de tu diálogo
 import CrearEgresosDialog from './vdialogs/CrearEgresosDialog.vue'
+
+const emit = defineEmits(['save', 'close'])
+const isDialogOpen = ref(false)
+const egresosList = ref([])
+const isSaving = ref(false)
+
+const selectedDocument = ref('')
+const NombreDelProveedor = ref('')
+const DocumentoSeleccionado = ref('')
+
+// 1. Declaramos la variable reactiva
+const tipoDeEgreso = ref<string>('')
+
+const crearEgresoDialog = ref<InstanceType<typeof CrearEgresosDialog> | null>(null)
 
 // import type { Product } from './type'
 
@@ -14,6 +30,8 @@ const isDialogActive = ref(false)
 const infofactura = ref('')
 
 isDialogActive.value = false
+
+const showDetailsPayment = ref(false)
 
 // const certificateNombre = ref('')
 const certificateFile = ref<File | null>(null)
@@ -55,41 +73,75 @@ const costoFormateado = computed(() => {
 
 // 🔹 Opciones del datatable
 
-interface ComprasT {
-  id: number
-  subtotal: number
-  vatvalue: number
-  retefuente: number
-  reteiva: number
-  discount: number
-  total: number
-}
+// interface CxPPayment {
+//   id: number | null
+//   nit: string | null
+//   branch: string | null
+//   lapse: string | null
+//   report_date: string | null
+//   check_date: string | null
+//   delivery_date: string | null
+//   consecutive: number | null
+//   document: string | null
+//   supplier_name: string | null
+//   value_cxp: number | null
+//   others_payments: number | null
+//   observations: string | null
+//   payment_method: string | null
+//   check_number: number | null
+//   payment_type: 'PagosFacturas' | 'OtrosPagos' | null
+//   state: 'Activo' | 'Eliminado' | 'Pendiente' | null
+//   state01: string | null
+//   state02: string | null
+//   state03: string | null
+//   proyect: string | null
+//   sproyect: string | null
+//   center: string | null
+//   activity: string | null
+//   companies_id: number | null
+//   suppliers_id: number | null
+//   created_at: string | null
+//   updated_at: string | null
+//   usercreate: string | null
+//   userupdate: string | null
+// }
 
-interface Producto {
-  id: number
-  products_id: number
-  companies_id: number
-  year: string
-  code: string
-  store: string
-  batch: string
-  group_name: string
-  name: string
-  quantity: string
-  quantity1: string
-  price: string
-  cost: string
-  lastcost: string
-  measure_name: string
-  previous_balance: number | null
-  subtotal: string
-}
+const dialog = ref(false)
+const valid = ref(true)
+const form = ref<HTMLFormElement | null>(null)
 
-const _subtotal = ref(0)
-const _descuentos = ref(0)
-const _valoriva = ref(0)
-const _valorretenciones = ref(0)
-const _total = ref(0)
+// const defaultItem: CxPPayment = {
+//   id: null,
+//   nit: null,
+//   branch: null,
+//   lapse: null,
+//   report_date: null,
+//   check_date: null,
+//   delivery_date: null,
+//   consecutive: null,
+//   document: null,
+//   supplier_name: null,
+//   value_cxp: null,
+//   others_payments: null,
+//   observations: null,
+//   payment_method: null,
+//   check_number: null,
+//   payment_type: 'PagosFacturas',
+//   state: 'Activo',
+//   state01: null,
+//   state02: null,
+//   state03: null,
+//   proyect: null,
+//   sproyect: null,
+//   center: null,
+//   activity: null,
+//   companies_id: null,
+//   suppliers_id: null,
+//   created_at: null,
+//   updated_at: null,
+//   usercreate: 'System',
+//   userupdate: 'System',
+// }
 
 const itemsPerPage = ref(10)
 const page = ref(1)
@@ -115,16 +167,51 @@ const updateOptions = async (options: any) => {
   orderBy.value = options.sortBy[0]?.order
 }
 
-const recordComprasT = ref<ComprasT>(
-  {
-    id: 0,
-    subtotal: 0,
-    vatvalue: 0,
-    retefuente: 0,
-    reteiva: 0,
-    discount: 0,
-    total: 0,
-  })
+// const editedItem = reactive<CxPPayment>({ ...defaultItem })
+
+const nitRules = [
+  (v: string) => (v && v.length <= 20) || 'El NIT no debe exceder los 20 caracteres',
+]
+
+const lapseRules = [
+  (v: string) => (v && /^\d{6}$/.test(v)) || 'El Periodo debe ser un número de 6 dígitos (YYYYMM)',
+]
+
+const dateRules = [
+  (v: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) || 'Formato de fecha inválido (YYYY-MM-DD)',
+]
+
+const valueRules = [
+  (v: number) => (v !== null && v >= 0) || 'El valor debe ser un número positivo',
+]
+
+const open = (item: CxPPayment | null = null) => {
+  if (item)
+    Object.assign(editedItem, item)
+  else
+    Object.assign(editedItem, defaultItem)
+
+  dialog.value = true
+}
+
+const close = () => {
+  dialog.value = false
+  form.value?.resetValidation()
+  emit('close')
+}
+
+const save = async () => {
+  const { valid } = await form.value!.validate()
+  if (valid) {
+    emit('save', editedItem)
+    close()
+  }
+}
+
+// Exponer la función open para que el componente padre pueda llamarla
+defineExpose({
+  open,
+})
 
 const newRecordCargue = ref<Cargue>({
   id: 0,
@@ -141,36 +228,6 @@ const newRecordCargue = ref<Cargue>({
   subtotal: 0,
   total: 0,
 })
-
-export interface recDetalle {
-  code: string
-  name: string
-  stoe: string
-  quantity: number
-  vat: number
-  discount: number
-  cost: number
-  valueprevious: number
-  valuediscount: number
-  subtotal: number
-  total: number
-}
-
-export interface Cargue {
-  id: number
-  idregistro: number
-  code: string
-  name: string
-  store: string
-  quantity: number
-  vat: number
-  discount: number
-  cost: number
-  valueprevious: number
-  valuediscount: number
-  subtotal: number
-  total: number
-}
 
 const itemDetalle = ref<Cargue []>([])
 
@@ -333,6 +390,11 @@ const snackbarColor = ref('success')
 const responseData = ref({
   data: [],
   payments: [],
+  suppliers: [],
+  sources: [],
+  otherexpenses: [],
+  docspayments: [],
+  docspaymentsothers: [],
   totaldocumentos: 0,
   page: 1,
   per_page: 10,
@@ -341,6 +403,10 @@ const responseData = ref({
 // 🔹 Diálogo de confirmación de eliminación
 const payments = ref([])
 const suppliers = ref([])
+const otherexpenses = ref([])
+const sources = ref([])
+const docspayments = ref([])
+const docspaymentsothers = ref([])
 
 const nameRecordToDelete = ref('')
 const showConfirmDialog = ref(false)
@@ -561,18 +627,19 @@ const loadInfo = async () => {
     responseData.value = response.data
 
     payments.value = responseData.value.data
+    suppliers.value = responseData.value.suppliers
+    sources.value = responseData.value.sources
+    docspayments.value = responseData.value.docspayments
+    docspaymentsothers.value = responseData.value.docspaymentsothers
+    otherexpenses.value = responseData.value.otherexpenses
+
+    // console.log('Soy OtherExense: ', otherexpenses.value)
 
     // // eslint-disable-next-line camelcase
     // docs_purchases.value = responseData.value.docspurchases
     // // eslint-disable-next-line camelcase
     // docs_inputs_outputs.value = responseData.value.docsinputsoutputs
     // suppliers.value = responseData.value.suppliers
-
-    // cptpurchases.value = responseData.value.cptpurchases
-    // products.value = responseData.value.products
-
-    // cptes.value = responseData.value.cptes
-    // dctoscxp.value = responseData.value.dctoscxp
   }
   catch (error) {
     console.error('Error al intentar enviar correo :', error)
@@ -611,7 +678,7 @@ export interface Dctoscxp {
 
 // 🔹 Computed para acceder fácilmente a los datos
 // const infoData = computed(() => responseData.value?.data ?? [])
-const totalRecords = computed(() => responseData.value?.totaldocument ?? 0)
+const totalRecords = computed(() => responseData.value?.totaldocumentos ?? 0)
 
 const infoData = computed(() => {
   const data = responseData.value.payments ?? []
@@ -674,7 +741,7 @@ const saveRecordCompras = async () => {
       responseData.value.data = [registroActualizado, ...responseData.value.data]
 
       // Actualizamos el contador total si lo usas
-      responseData.value.totaldocument += 1
+      responseData.value.totaldocumentos += 1
     }
 
     Limpiar_RegCargue()
@@ -899,53 +966,94 @@ const openEditDialog = _infoData => {
 }
 
 // 🔹 Abrir modal en modo creación
-const openCreateDialog = () => {
+const openCreateDialog = (tipo: string) => {
   editMode.value = false
   newRecord.value = {
     id: null,
     nit: '',
     branch: '01',
-    name: '',
-    number: 0,
-    concept_inv: '',
-    concept_class: '001',
+    lapse: '',
     report_date: (hoy),
-    purchase_invoice: 0,
-    prefix: '',
-    documento_purchase: '',
-    order_number: '',
-    date_from: (hoy),
-    date_to: (hoy),
-    subtotal: 0,
-    vatvalue: 0,
-    reteiva: 0,
-    reteica: 0,
-    products_discount: 0,
-    additional_discounts: 0,
-    additional_value: 0,
-    freight: 0,
-    total_purchases: 0,
-    plate: '',
-    type: 'Otras',
-    type_of_purchase: 'Crédito',
-    state: 'Activo',
+    check_date: '',
+    delivery_date: (hoy),
+    consecutive: 0,
+    document: '',
+    supplier_name: '',
+    value_cxp: 0,
+    others_payments: 0,
+    observations: '',
+    payment_method: '',
+    check_number: 0,
+    payment_type: 'PagosFacturas', // Valor inicial por defecto dentro de las opciones válidas
+    state: 'Activo', // Valor inicial por defecto dentro de las opciones válidas
     state01: '',
     state02: '',
     state03: '',
-    companies_id: 0,
     proyect: '',
     sproyect: '',
     center: '',
     activity: '',
-    observations: '',
-    created_at: new Date(),
-    updated_at: new Date(),
+    companies_id: 1,
+    suppliers_id: null,
+    created_at: hoy,
+    updated_at: hoy,
     usercreate: 'System',
     userupdate: 'System',
   }
 
   // console.log('🆕 Abriendo modal para nuevo clientes :', newRecord.value.type_document_identification_id, ' TypeIdent:', typedocument.value)
   showDialog.value = true
+
+  tipoDeEgreso.value = tipo
+
+  // 4. CONEXIÓN: Llamas al método expuesto por el hijo pasándole los datos
+  if (crearEgresoDialog.value)
+    crearEgresoDialog.value.open({ ...newRecord.value })
+}
+
+const openCreateDialogOther = (tipo: string) => {
+  editMode.value = false
+  newRecord.value = {
+    id: null,
+    nit: '',
+    branch: '01',
+    lapse: '',
+    report_date: (hoy),
+    check_date: '',
+    delivery_date: (hoy),
+    consecutive: 0,
+    document: '',
+    supplier_name: '',
+    value_cxp: 0,
+    others_payments: 0,
+    observations: '',
+    payment_method: '',
+    check_number: 0,
+    payment_type: 'OtrosPagos', // Valor inicial por defecto dentro de las opciones válidas
+    state: 'Activo', // Valor inicial por defecto dentro de las opciones válidas
+    state01: '',
+    state02: '',
+    state03: '',
+    proyect: '',
+    sproyect: '',
+    center: '',
+    activity: '',
+    companies_id: 1,
+    suppliers_id: null,
+    created_at: hoy,
+    updated_at: hoy,
+    usercreate: 'System',
+    userupdate: 'System',
+  }
+
+  // console.log('🆕 Abriendo modal para nuevo clientes :', newRecord.value.type_document_identification_id, ' TypeIdent:', typedocument.value)
+  showDialog.value = true
+
+  tipoDeEgreso.value = tipo
+
+  // 4. CONEXIÓN: Llamas al método expuesto por el hijo pasándole los datos
+  if (crearEgresoDialog.value)
+    crearEgresoDialog.value.open({ ...newRecord.value })
 }
 
 const confirmSaveCharges = (id: number, Purchase_Invoice: string) => {
@@ -1031,6 +1139,41 @@ const deleteRecord = async () => {
 
     showSnackbar.value = false
     nextTick(() => (showSnackbar.value = true))
+  }
+}
+
+const handleSaveEgreso = async (egreso: CxPPayment) => {
+  // console.log('Soy Egreso:', egreso)
+  try {
+    const response = await axios.post('/api/supplierpayment', {
+      ...egreso, // Ahora sí, este 'egreso' es un objeto JavaScript 100% normal
+      company_id: localStorage.getItem('company_id'),
+      process_year: localStorage.getItem('process_year'),
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    console.log('Soy Response.date', response.data)
+
+    const registroActualizado = { ...response.data.payments }
+
+    if (egreso.id) {
+      // MODO EDICIÓN
+      responseData.value.payments = responseData.value.payments.map((item: any) =>
+        item.id === registroActualizado.id ? registroActualizado : item,
+      )
+    }
+    else {
+      // MODO CREACIÓN
+      responseData.value.payments = [registroActualizado, ...responseData.value.payments]
+
+      // Actualizamos el contador total (verifica el nombre real de esta key también)
+      responseData.value.totaldocumentos += 1
+    }
+  }
+  catch (error) {
+    console.error('Error al intentar guardar:', error)
   }
 }
 
@@ -1194,57 +1337,15 @@ function onProductoSeleccionado(producto: Producto | null): void {
   }
 }
 
-function onProveedorSeleccionado(proveedor: Supplier | null): void {
-  proveedorInfo.value = proveedor || null
-  if (proveedor) {
-    newRecord.value.nit = proveedor.nit
-    newRecord.value.branch = proveedor.branch ?? ''
-    newRecord.value.dv = proveedor.dv ?? ''
-    newRecord.value.name = proveedor.name
-  }
-}
-
-function onConceptoSeleccionado(concepto: Concept | null): void {
-  conceptoInfo.value = concepto || null
-  if (concepto)
-    newRecord.value.concept_inv = concepto.code
-}
-
-function onDctoscxpSeleccionado(_dctoscxp: Dctoscxp | null): void {
-  dctoscxpInfo.value = _dctoscxp || null
-  if (_dctoscxp)
-    newRecord.value.documento_purchase = _dctoscxp.code
-}
-
-function Totalizar_Compra(): void {
-  _SubTotal.value = 0
-  _valoriva.value = 0
-  _valorretenciones.value = 0
-  _descuentos.value = 0
-  _total.value = 0
-}
-
-const productHeaders = [
-  { title: 'ID', key: 'id', width: 60, sortable: false, align: 'start' },
-  { title: 'Código', key: 'code', width: 100, sortable: false },
-  { title: 'Descripción del Producto', key: 'name', sortable: false, width: '35%' },
-  { title: 'Bd', key: 'store', width: 90, sortable: false },
-  { title: 'Cant.', key: 'quantity', width: 80, align: 'end', sortable: false },
-  { title: 'Desc (%)', key: 'discount', width: 100, align: 'end', sortable: false },
-  { title: 'IVA', key: 'vat', width: 80, align: 'end', sortable: false },
-  { title: 'Costo Unit.', key: 'cost', width: 120, align: 'end', sortable: false },
-  { title: 'ValParcial', key: 'subtotal', width: 130, align: 'end', sortable: false },
-  { title: 'Acciones', key: 'actions', sortable: false, width: 130, aling: 'center' }, // Espacio optimizado para tus 3 IconBtn compactos
-]
-
 const headers = [
-  { title: '#', key: 'id', width: 50 },
+  { title: '#Id', key: 'id', width: 50 },
   { title: 'Fecha', key: 'report_date', sortable: true, width: 95 }, // Espacio justo para "AAAA-MM-DD"
   { title: 'Consecut.', key: 'consecutive', sortable: true, width: 70, align: 'end' },
-  { title: 'Dcto', key: 'document', sortable: true, width: 70, align: 'end' },
+  { title: 'Dcto', key: 'document', sortable: true, width: 70, align: 'start' },
 
   // A estas dos NO les pongas width para que absorban el espacio flexible y puedan hacer salto de línea
-  { title: 'Descripción', key: 'concept_name', sortable: true },
+  { title: 'Descripción', key: 'document_name', sortable: true },
+  { title: 'Origen de Pago', key: 'origin_name', sortable: true },
   {
     title: 'Nit/Cédula',
     key: 'nit',
@@ -1253,7 +1354,7 @@ const headers = [
     cellProps: { class: 'd-none d-lg-table-cell' },
     headerProps: { class: 'd-none d-lg-table-cell' },
   },
-  { title: 'Nombre del Tercero', key: 'name', sortable: true },
+  { title: 'Nombre del Tercero', key: 'supplier_name', sortable: true },
   { title: 'Tipo de Egreso', key: 'payment_type', sortable: true },
 
   // Columnas numéricas con un ancho fijo prudente
@@ -1261,6 +1362,65 @@ const headers = [
   { title: 'Estado', key: 'state', sortable: true, width: 90 },
   { title: 'Acciones', key: 'actions', sortable: false, width: 120, aling: 'center' }, // Espacio optimizado para tus 3 IconBtn compactos
 ]
+
+function onEgresoGuardado({ esEdicion, registro }: { esEdicion: boolean; registro: any }) {
+  if (esEdicion) {
+    // MODO EDICIÓN
+    responseData.value.payments = responseData.value.payments.map((item: any) =>
+      item.id === registro.id ? registro : item,
+    )
+  }
+  else {
+    // MODO CREACIÓN
+    responseData.value.payments = [registro, ...responseData.value.payments]
+    responseData.value.totaldocumentos += 1
+  }
+}
+
+const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
+  selectedDocument.value = item
+  NombreDelProveedor.value = item.name
+  console.log('Id Company:', localStorage.getItem('company_id'))
+  showDetailsPayment.value = true
+
+  const urlbase = (paymenttype === 'PagosFacturas') ? '/api/getpayments-detail' : '/api/getpayments-detail-othr'
+  try {
+    // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
+    const { data } = await axios.post(urlbase, {
+      url_token: localStorage.getItem('auth_token'),
+      company_id: localStorage.getItem('company_id'),
+      document: selectedDocument.value,
+      page: page.value,
+      per_page: itemsPerPage.value,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+    )
+
+    // invoiceDetData.value = data
+    console.log('Respuesta DetDocument :', data)
+
+    // DetailsDocument.value = data.details
+
+    // console.log('Soy ID Envío:', selectedInvoice.value.id)
+    // console.log('Respuesta InvoiceDetData:', invoiceDetData.value)
+    // yaBusco.value = true // Marcar que ya se realizó una búsqueda
+    // console.log('Soy Registro..(200):', invoiceDetData.value.data.length)
+    // if (invoiceDetData.value.TotalRegistros === 0 && yaBusco.value)
+    //   snackbar.value = true
+  }
+  catch (error) {
+    console.error(error)
+  }
+
+  // finally {
+  //   loading.value = false
+  // }
+
+  // editMode.value = true
+  // showDialog.value = true
+}
 </script>
 
 <template>
@@ -1269,7 +1429,7 @@ const headers = [
     <VRow class="align-center">
       <VCol
         cols="12"
-        md="10"
+        md="9"
         class="d-flex align-left flex-column"
       >
         <h4 class="text-primary mb-2">
@@ -1294,7 +1454,7 @@ const headers = [
 
       <VCol
         cols="12"
-        md="2"
+        md="3"
         class="d-flex justify-space-around  align-center gap-8 mt-4 mt-md-0"
       >
         <div class="d-flex flex-column align-center">
@@ -1311,8 +1471,7 @@ const headers = [
                 icon
                 class="mb-1"
                 style="background-color: #3903fc !important; color: #fff;"
-                readonly
-                @click="openCreateDialog"
+                @click="openCreateDialog('Pagos de Facturas')"
               >
                 <VIcon
                   icon="tabler-plus"
@@ -1341,8 +1500,7 @@ const headers = [
                 icon
                 class="mb-1"
                 style="background-color: rgb(252, 3, 15) !important; color: #fff;"
-                readonly
-                @click="openCreateDialog"
+                @click="openCreateDialogOther('Otros Pagos')"
               >
                 <VIcon
                   icon="tabler-plus"
@@ -1380,79 +1538,67 @@ const headers = [
         @update:options="updateOptions"
       >
         <template #item.id="{ item }">
-          <div class="cell-wrap columna_name">
+          <div class="cell-wrap text-column">
             {{ item.id }}
           </div>
         </template>
 
         <template #item.report_date="{ item }">
-          <div class="cell-wrap text-no-wrap columna_name">
+          <div class="cell-wrap text-column">
             {{ item.report_date }}
           </div>
         </template>
 
-        <template #item.number="{ item }">
-          <div class="cell-wrap text-no-wrap columna_name">
-            {{ item.number }}
+        <template #item.consecutive="{ item }">
+          <div class="cell-wrap text-column">
+            {{ item.consecutive }}
           </div>
         </template>
 
-        <template #item.concept_name="{ item }">
-          <div class="cell-wrap text-no-wrap columna_name">
-            {{ item.concept_name }}
+        <template #item.document="{ item }">
+          <div class="cell-wrap text-column">
+            {{ item.document }}
           </div>
         </template>
 
-        <template #item.purchase_invoice="{ item }">
-          <div class="cell-wrap text-no-wrap columna_name">
-            {{ item.purchase_invoice }}
+        <template #item.document_name="{ item }">
+          <div class="cell-wrap text-column">
+            {{ item.document_name }}
+          </div>
+        </template>
+
+        <template #item.origin_name="{ item }">
+          <div class="cell-wrap text-column">
+            {{ item.origin_name }}
+          </div>
+        </template>
+
+        <template #item.supplier_name="{ item }">
+          <div class="cell-wrap text-column">
+            {{ item.supplier_name }}
           </div>
         </template>
 
         <template #item.nit="{ item }">
-          <div class="cell-wrap columna_name">
+          <div class="cell-wrap text-column">
             {{ item.nit }}
           </div>
         </template>
 
-        <template #item.name="{ item }">
-          <div class="cell-wrap columna_name2 text-no-wrap">
-            {{ item.name }}
+        <template #item.payment_type="{ item }">
+          <div class="cell-wrap text-column">
+            {{ item.payment_type }}
           </div>
         </template>
 
-        <template #item.subtotal="{ item }">
-          <div class="cell-wrap columna_name text-right">
-            {{ formatCurrency(item.subtotal, 0) }}
-          </div>
-        </template>
-
-        <template #item.vatvalue="{ item }">
-          <div class="cell-wrap columna_name text-right">
-            {{ formatCurrency(item.vatvalue, 0) }}
-          </div>
-        </template>
-
-        <template #item.descuentos="{ item }">
-          <div class="cell-wrap columna_name text-right">
-            {{ formatCurrency(item.descuentos, 0) }}
-          </div>
-        </template>
-
-        <template #item.retenciones="{ item }">
-          <div class="cell-wrap columna_name text-right">
-            {{ formatCurrency(item.retenciones, 0) }}
-          </div>
-        </template>
-
-        <template #item.total_purchases="{ item }">
-          <div class="cell-wrap columna_name text-right">
-            {{ formatCurrency(item.total_purchases, 0) }}
+        <template #item.value_cxp="{ item }">
+          <div class="cell-wrap text-column text-right">
+            {{ formatCurrency(item.value_cxp, 0) }}
           </div>
         </template>
 
         <template #item.state="{ item }">
-          <div class="cell-wrap columna_name">
+          <div class="cell-wrap text-column">
             {{ item.state }}
           </div>
         </template>
@@ -1481,10 +1627,11 @@ const headers = [
             />
           </IconBtn>
           <IconBtn
-            :disabled="item.state === 'Activo'"
             density="compact"
             class="ma-0"
-            @click="confirmPurchases(item.id, item.purchase_invoice)"
+            @click="item.payment_type === 'PagosFacturas'
+              ? ShowDetailPaymentDialog(item, 'PagosFacturas')
+              : ShowDetailPaymentDialog(item, 'OtrosPagos')"
           >
             <VIcon
               icon="tabler-list-check"
@@ -1544,7 +1691,17 @@ const headers = [
     </VSnackbar>
   </section>
 
-  <CrearEgresosDialog />
+  <CrearEgresosDialog
+    ref="crearEgresoDialog"
+    :suppliers="suppliers"
+    :tipo-de-egreso="tipoDeEgreso"
+    :sources="sources"
+    :otherexpenses="otherexpenses"
+    :docspayments="docspayments"
+    :docspaymentsothers="docspaymentsothers"
+    @save="handleSaveEgreso"
+    @egreso-guardado="onEgresoGuardado"
+  />
 
   <VDialog
     v-model="showComprasDialog"
@@ -2705,6 +2862,19 @@ textarea {
 .products-gridc tbody tr:hover {
   background-color: #eee !important;
 }
+
+.text-column {
+   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif, sans-serif;
+   font-size: 0.85em;
+   line-height: 1 !important;
+   margin-block-start: 1 !important;
+ }
+
+@media (max-width: 1400px) {
+  :deep(.v-data-table) {
+    font-size: 0.85em !important;
+  }
+}
 </style>
 
 <style>
@@ -2725,25 +2895,4 @@ textarea {
 }
 
 /* Forzar el fondo negro en el encabezado de esta tabla específica */
-.products-grid :deep(thead th .v-table) {
-  background-color: #1e1e1e !important; /* Negro mate elegante */
-  block-size: 36px !important;              /* Altura compacta para el header */
-  color: #fff !important;            /* Texto blanco */
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase;
-}
-
-/* Ajustes finos para las filas de datos de la grilla */
-.products-gridc :deep(tbody td) {
-  block-size: 32px !important;              /* Filas delgadas para optimizar espacio */
-  font-size: 0.9rem !important;
-}
-
-/* 1. Forzamos la altura de la fila y de cada celda */
-.products-gridc.v-table.v-data-table__tr {
-  /* Estas variables controlan la altura base de las filas en Vuetify 3 */
-  --v-table-row-height: 15px !important;
-  --v-table-header-height: 30px !important;
-}
 </style>

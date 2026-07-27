@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('sproyect', 20)->nullable();
             $table->string('activity', 20)->nullable();
             $table->integer('idregister')->nullable();
+            $table->decimal('payment_amount', 20, 2)->nullable();
             $table->enum('calculate', ['Suma', 'Resta', 'No Aplica'])->nullable()->default('Suma');
             $table->enum('state', ['Activo', 'Eliminado', 'Pendiente'])->nullable()->default('Activo');
             $table->string('state01', 20)->nullable();

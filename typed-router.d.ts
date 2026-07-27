@@ -275,6 +275,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'egresos-vdialogs-reportar-otros-pagos-dialog': RouteRecordInfo<
+      'egresos-vdialogs-reportar-otros-pagos-dialog',
+      '/egresos/vdialogs/ReportarOtrosPagosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'egresos-vdialogs-reportar-pagos-dialog': RouteRecordInfo<
+      'egresos-vdialogs-reportar-pagos-dialog',
+      '/egresos/vdialogs/ReportarPagosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'facturas': RouteRecordInfo<
       'facturas',
       '/facturas',
@@ -655,6 +669,18 @@ declare module 'vue-router/auto-routes' {
     'resources/ts/pages/egresos/vdialogs/CrearEgresosDialog.vue': {
       routes:
         | 'egresos-vdialogs-crear-egresos-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/egresos/vdialogs/ReportarOtrosPagosDialog.vue': {
+      routes:
+        | 'egresos-vdialogs-reportar-otros-pagos-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/egresos/vdialogs/ReportarPagosDialog.vue': {
+      routes:
+        | 'egresos-vdialogs-reportar-pagos-dialog'
       views:
         | never
     }

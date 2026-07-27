@@ -19,6 +19,9 @@ return new class extends Migration
             $table->unsignedBigInteger('cxp_payment_id')->index()->nullable();
             $table->foreign('cxp_payment_id')->references('id')->on('cxp_payments')->onDelete('cascade');
 
+            $table->unsignedBigInteger('purchases_invoice_id')->index()->nullable();
+            $table->foreign('purchases_invoice_id')->references('id')->on('purchases_invoices')->onDelete('cascade');
+
             $table->integer('consecutive')->nullable();
             $table->string('document', 20)->nullable();
             $table->string('nit', 20)->nullable();

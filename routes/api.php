@@ -136,10 +136,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/getdocuments', [InventoryDocumentController::class, 'getDocuments']);
     Route::post('/purchases', [InventoryDocumentController::class, 'store']);
     Route::post('/purchases-details', [InventoryDocumentController::class, 'storedetails']);
+    Route::post('/documents-details', [InventoryDocumentController::class, 'getDetDocuments']);
 
     Route::get('/getsupplierpayments', [CxpPaymentController::class, 'getPayments']);
     Route::post('/supplierpayment', [CxpPaymentController::class, 'store']);
     Route::post('/supplierpayment-details', [CxpPaymentController::class, 'storedetails']);
+    Route::post('/getpayments-detail', [CxpPaymentController::class, 'getPaymentsDetail']);
+    Route::post('/getpayments-detail-othr', [CxpPaymentController::class, 'getPaymentsDetailothr']);
 });
 
 Route::post('/dian/recibir-token', [DianController::class, 'recibirToken']);

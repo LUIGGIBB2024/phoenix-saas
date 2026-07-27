@@ -12,19 +12,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('control_consecutives', function (Blueprint $table) {
+        Schema::create('source_payments', function (Blueprint $table) {
             $table->id();
-            $table->string('type', 20)->nullable();
-            $table->string('lapso', 6)->nullable();
-            $table->integer('consecutive')->nullable()->default(0);
+            $table->string('code', 20)->nullable()->index();
+            $table->string('name', 255)->nullable();
+
+            $table->enum('type', ['Pagos en Efectivo', 'Pagos en Cheques', 'Transferencias Electrónicas'])->default('Pagos en Efectivo');
+            $table->enum('state', ['Activo', 'Eliminado', 'Pendiente'])->nullable()->default('Activo');
+
+            $table->unsignedBigInteger('accounting_setups_id')->index()->nullable();
+            $table->foreign('accounting_setups_id')->references('id')->on('accounting_setups')->onDelete('set null');
 
             $table->unsignedBigInteger('companies_id')->index()->nullable();
             $table->foreign('companies_id')->references('id')->on('companies')->onDelete('set null');
 
-            // $table->unsignedBigInteger('general_documents_id')->index()->nullable();
-            // $table->foreign('general_documents_id')->references('id')->on('general_documents')->onDelete('set null');
-
-            $table->index(['companies_id', 'type', 'lapso'], 'idx_companiesid_generaldocuments');
+            $table->index(['companies_id', 'code'], 'idx_companies_code');
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
@@ -38,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('control_consecutives');
+        Schema::dropIfExists('source_payments');
     }
 };

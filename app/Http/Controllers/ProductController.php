@@ -158,14 +158,15 @@ class ProductController extends Controller
 
     public function updatelist(Request $request)
     {
-        $companyId      = $request->input('companies_id');
-        $product        = $request->input('code');
+        //dd($request);
+        $companyId      = $request->company_id;
+        $product        = $request->code;
         $codlista       = "01";
-        $percent        = $request->input('percent');
-        $valor          = $request->input('sale_value');
+        $percent        = $request->percent;
+        // $valor          = $request'parameters']['sale_value';
         $producto       = Product::where('code', $product)->where('companies_id', $companyId)->first();
         $idproduct      = $producto->id;
-   
+
         try {
             $reg_prod = PriceDetail::updateOrCreate(
                 [
@@ -187,7 +188,7 @@ class ProductController extends Controller
 
                 [
                     'status'   => '404 OK',
-                    'msg'      => 'Error en la actualización de la factura: ' . $numerofactura,
+                    'msg'      => 'Error en la actualización de la factura: ',
                     'error' => $ex,
                 ],
                 Response::HTTP_BAD_REQUEST

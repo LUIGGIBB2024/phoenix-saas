@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
+import { Spanish } from 'flatpickr/dist/l10n/es.js'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { VCard, VCardText } from 'vuetify/components/VCard'
 import { VCol } from 'vuetify/components/VGrid'
@@ -7,12 +8,15 @@ import { VCol } from 'vuetify/components/VGrid'
 // import type { Product } from './type'
 
 const archivos = ref<File[]>([])
+const form = ref<HTMLFormElement | null>(null)
 
 const isFocused = ref(false)
 const isDialogActive = ref(false)
 const infofactura = ref('')
 
 isDialogActive.value = false
+
+const showDetailsDialog = ref(false)
 
 // const certificateNombre = ref('')
 const certificateFile = ref<File | null>(null)
@@ -23,6 +27,10 @@ const autocompleteProductoKey = ref<number>(0)
 
 const tipodeusuario = ref(localStorage.getItem('tipo_de_usuario'))
 const process_year = ref(localStorage.getItem('process_year'))
+
+const selectedDocument = ref('')
+const NombreDelProveedor = ref('')
+const DocumentoSeleccionado = ref('')
 
 function onFileChange(e: Event) {
   const target = e.target as HTMLInputElement
@@ -103,8 +111,10 @@ const token = localStorage.getItem('auth_token')
 
 const accessToken = useCookie('accessToken', { path: '/' })
 
+const tipoDctoDeInventario = ref('')
 const productoSeleccionado = ref<Producto | null>(null)
 const productoInfo = ref<Producto | null>(null)
+const DetailsDocument = ref([])
 
 // accessToken.value = response.data.token // ← el que te devuelve Laravel
 
@@ -140,6 +150,7 @@ const newRecordCargue = ref<Cargue>({
   valuediscount: 0,
   subtotal: 0,
   total: 0,
+  type: tipoDctoDeInventario.value,
 })
 
 export interface recDetalle {
@@ -170,6 +181,7 @@ export interface Cargue {
   valuediscount: number
   subtotal: number
   total: number
+  type: string
 }
 
 const itemDetalle = ref<Cargue []>([])
@@ -255,6 +267,7 @@ export interface Document {
   total_purchases?: number
   plate?: string
   type?: 'Compras' | 'Otras Entradas' | 'Otras Salidas' | 'Traslados' | 'Devolución' | 'Otras'
+  typereal: string
   type_of_purchase?: 'Contado' | 'Crédito'
   state?: 'Activo' | 'Eliminado' | 'Pendiente'
   state01?: string
@@ -308,6 +321,7 @@ const newRecord = ref<Document>({
   total_purchases: 0,
   plate: '',
   type: 'Otras',
+  typereal: '',
   type_of_purchase: 'Contado',
   state: 'Activo',
   state01: '',
@@ -378,6 +392,7 @@ function agregarProducto(): void {
       vat: newRecordCargue.value.vat,
       discount: newRecordCargue.value.discount,
       cost: newRecordCargue.value.cost,
+      type: tipoDctoDeInventario.value,
       valueprevious: 0,
       valuediscount: 0,
       subtotal: 0,
@@ -537,7 +552,8 @@ watch(showDialog, isOpen => {
       freight: 0,
       total_purchases: 0,
       plate: '',
-      type: 'Otras',
+      type: (tipoDctoDeInventario.value === 'Compras') ? 'Compras' : 'Otras Entradas',
+      typereal: '',
       type_of_purchase: 'Crédito',
       state: 'Activo',
       state01: '',
@@ -609,6 +625,8 @@ export interface Concept {
   id: number
   code: string
   name: string
+  documents: string
+  type: string
 }
 
 export interface Dctoscxp {
@@ -625,6 +643,22 @@ const conceptoInfo = ref<Concept | null>(null)
 
 const dctoscxpSeleccionado = ref<Dctoscxp | null>(null)
 const dctoscxpInfo = ref<Dctoscxp | null>(null)
+
+const ValidarCrearDocumentos = computed(() => {
+  const faltaProveedor = !proveedorSeleccionado.value
+  const faltaConcepto = !conceptoSeleccionado.value
+  const faltaDocumento = !dctoscxpSeleccionado.value
+
+  // Validación específica para 'Pagos de Facturas'
+  if (newRecord.value.type === 'Compras') {
+    const faltaNumFactura = !newRecord.value.purchase_invoice
+
+    return faltaProveedor || faltaConcepto || faltaDocumento || faltaNumFactura
+  }
+
+  // Validación para cualquier otro tipo de egreso
+  return faltaProveedor || faltaConcepto
+})
 
 // 🔍 Escucha cambios en la barra de búsqueda
 // watch(searchQuery, () => {
@@ -664,8 +698,8 @@ const saveRecordCompras = async () => {
     items: itemDetalle.value,
   }
 
-  console.log('Información Estructura:', newRecordCargue.value)
-  console.log('--- FormData enviado ---')
+  // console.log('Información Estructura:', newRecordCargue.value)
+  // console.log('--- FormData enviado ---')
 
   try {
     const response = await axios.post('/api/purchases-details', {
@@ -901,6 +935,7 @@ const openEditDialog = _infoData => {
     total_purchases: _infoData.total_purchases,
     plate: _infoData.plate,
     type: _infoData.type,
+    typereal: _infoData.typereal,
     type_of_purchase: _infoData.type_of_purchase,
     state: _infoData.state,
     state01: _infoData.state01,
@@ -925,7 +960,7 @@ const openEditDialog = _infoData => {
 }
 
 // 🔹 Abrir modal en modo creación
-const openCreateDialog = () => {
+const openCreateDialog = (tipodcto: string) => {
   editMode.value = false
   newRecord.value = {
     id: null,
@@ -952,7 +987,7 @@ const openCreateDialog = () => {
     freight: 0,
     total_purchases: 0,
     plate: '',
-    type: 'Otras',
+    type: (tipoDctoDeInventario.value === 'Compras') ? 'Compras' : 'Otras Entradas',
     type_of_purchase: 'Crédito',
     state: 'Activo',
     state01: '',
@@ -970,6 +1005,13 @@ const openCreateDialog = () => {
     userupdate: 'System',
   }
 
+  tipoDctoDeInventario.value = tipodcto
+  proveedorSeleccionado.value = null
+  dctoscxpSeleccionado.value = null
+  conceptoSeleccionado.value = null
+
+  // console.log('Soy Tipo de Documento:', tipoDctoDeInventario.value)
+
   // console.log('🆕 Abriendo modal para nuevo clientes :', newRecord.value.type_document_identification_id, ' TypeIdent:', typedocument.value)
   showDialog.value = true
 }
@@ -979,19 +1021,24 @@ const confirmSaveCharges = (id: number, Purchase_Invoice: string) => {
   showSaveChargesDialog.value = true
 }
 
-const confirmPurchases = (id: number, Purchase_Invoice: string) => {
+const confirmPurchases = (id: number, Purchase_Invoice: string, item: any) => {
   const facturacompra = Purchase_Invoice ?? ''
 
   itemDetalle.value = []
   infofactura.value = `Factura :${facturacompra.trim}`
-  console.log('🛑 Confirmar Ingreso de Compras :', id, 'Purchase:', Purchase_Invoice)
   showComprasDialog.value = true
   purchaseinvoice.value = Purchase_Invoice
   recordComprasT.value.id = id
+  tipoDctoDeInventario.value = item.type
+
+  // if (tipoDctoDeInventario.value!=='Compras')
+  //    newRecordCargue.value.cost =
+
+  // console.log('🛑 Confirmar Ingreso de Compras :', id, 'Purchase:', Purchase_Invoice, ' -', tipoDctoDeInventario.value)
 }
 
 const cargarproductosDialog = () => {
-  console.log('🛑 Confirmar Cargue de Productos :')
+  // console.log('🛑 Confirmar Cargue de Productos :', ' -', tipoDctoDeInventario.value)
   showCarguesDialog.value = true
 }
 
@@ -1230,6 +1277,8 @@ function onProductoSeleccionado(producto: Producto | null): void {
     // Asignación reactiva (cuando cargas el producto)
     costoActual.value = Number.parseFloat(producto.cost) || 0
   }
+  if (tipoDctoDeInventario.value !== 'Compras')
+    newRecordCargue.value.cost = Number.parseFloat(producto.cost)
 }
 
 function onProveedorSeleccionado(proveedor: Supplier | null): void {
@@ -1246,6 +1295,8 @@ function onConceptoSeleccionado(concepto: Concept | null): void {
   conceptoInfo.value = concepto || null
   if (concepto)
     newRecord.value.concept_inv = concepto.code
+  newRecord.value.typereal = concepto.documents
+  console.log('Soy Concepto Typereal ', newRecord.value.typereal)
 }
 
 function onDctoscxpSeleccionado(_dctoscxp: Dctoscxp | null): void {
@@ -1274,6 +1325,67 @@ function Totalizar_Compra(): void {
 //   fecha.setDate(fecha.getDate() + (cliente.deadline_days || 30))
 //   fechaVencimiento.value = fecha.toISOString().substring(0, 10)
 // }
+// 🔹 Abrir modal en modo edición
+const showDetailDocumentDialog = async (item: any) => {
+  selectedDocument.value = item
+  NombreDelProveedor.value = item.name
+  console.log('Id Company:', localStorage.getItem('company_id'))
+  showDetailsDialog.value = true
+  try {
+    // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
+    const { data } = await axios.post('/api/documents-details', {
+      url_token: localStorage.getItem('auth_token'),
+      company_id: localStorage.getItem('company_id'),
+      document: selectedDocument.value,
+      page: page.value,
+      per_page: itemsPerPage.value,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+    )
+
+    // invoiceDetData.value = data
+    console.log('Respuesta DetDocument :', data)
+    DetailsDocument.value = data.details
+
+    // console.log('Soy ID Envío:', selectedInvoice.value.id)
+    // console.log('Respuesta InvoiceDetData:', invoiceDetData.value)
+    // yaBusco.value = true // Marcar que ya se realizó una búsqueda
+    // console.log('Soy Registro..(200):', invoiceDetData.value.data.length)
+    // if (invoiceDetData.value.TotalRegistros === 0 && yaBusco.value)
+    //   snackbar.value = true
+  }
+  catch (error) {
+    console.error(error)
+  }
+
+  // finally {
+  //   loading.value = false
+  // }
+
+  // editMode.value = true
+  // showDialog.value = true
+}
+
+const closedet = () => {
+  showDetailsDialog.value = false
+  form.value?.resetValidation()
+}
+
+const Headers_Details = [
+  { title: 'ID', key: 'id', width: 60, sortable: false, align: 'start' },
+  { title: 'Código', key: 'code', width: 100, sortable: false },
+  { title: 'Descripción del Producto', key: 'name', sortable: false, width: '35%' },
+  { title: 'Bd', key: 'store', width: 90, sortable: false },
+  { title: 'cpto', key: 'concept_inv', width: 50, sortable: false },
+  { title: 'Cant.', key: 'amount', width: 80, align: 'end', sortable: false },
+  { title: 'Desc (%)', key: 'discount1', width: 100, align: 'end', sortable: false },
+  { title: 'IVA', key: 'vat', width: 80, align: 'end', sortable: false },
+  { title: 'Costo Unit.', key: 'unit_cost', width: 120, align: 'end', sortable: false },
+  { title: 'ValParcial', key: 'subtotal', width: 130, align: 'end', sortable: false },
+]
+
 const productHeaders = [
   { title: 'ID', key: 'id', width: 60, sortable: false, align: 'start' },
   { title: 'Código', key: 'code', width: 100, sortable: false },
@@ -1288,32 +1400,32 @@ const productHeaders = [
 ]
 
 const headers = [
-  { title: '#', key: 'id', width: 50 },
-  { title: 'Fecha', key: 'report_date', sortable: true, width: 95 }, // Espacio justo para "AAAA-MM-DD"
+  { title: '#', key: 'id', width: 40 },
+  { title: 'Fecha', key: 'report_date', sortable: true, width: 90 }, // Necesita ~85px para "YYYY-MM-DD"
   { title: 'Consecut.', key: 'number', sortable: true, width: 70, align: 'end' },
   { title: '#Factura', key: 'purchase_invoice', sortable: true, width: 70, align: 'end' },
 
-  // A estas dos NO les pongas width para que absorban el espacio flexible y puedan hacer salto de línea
+  // Sin width para que absorban el espacio dinámico disponible
   { title: 'Descripción', key: 'concept_name', sortable: true },
   {
     title: 'Nit/Cédula',
     key: 'nit',
     sortable: true,
-    width: 110,
+    width: 85,
     cellProps: { class: 'd-none d-lg-table-cell' },
     headerProps: { class: 'd-none d-lg-table-cell' },
   },
-  { title: 'Nombre del Tercero', key: 'name', sortable: true },
+  { title: 'Nombre del Tercero', key: 'name', sortable: true, width: 200 },
 
-  // Columnas numéricas con un ancho fijo prudente
-  { title: 'SubTotal', key: 'subtotal', sortable: true, width: 80, aling: 'end' },
-  { title: 'ValorIva', key: 'vatvalue', sortable: true, width: 70, aling: 'end' },
-  { title: 'Desctos', key: 'descuentos', sortable: true, width: 70, aling: 'end' },
-  { title: 'Retenc.', key: 'retenciones', sortable: true, width: 70, aling: 'end' },
-  { title: 'Total', key: 'total_purchases', sortable: true, width: 110, aling: 'end' },
+  // Corregido 'aling' -> 'align'
+  { title: 'SubTotal', key: 'subtotal', sortable: true, width: 65, align: 'end' },
+  { title: 'ValorIva', key: 'vatvalue', sortable: true, width: 60, align: 'end' },
+  { title: 'Desctos', key: 'descuentos', sortable: true, width: 60, align: 'end' },
+  { title: 'Retenc.', key: 'retenciones', sortable: true, width: 60, align: 'end' },
+  { title: 'Total', key: 'total_purchases', sortable: true, width: 70, align: 'end' },
 
-  { title: 'Estado', key: 'state', sortable: true, width: 90 },
-  { title: 'Acciones', key: 'actions', sortable: false, width: 120, aling: 'center' }, // Espacio optimizado para tus 3 IconBtn compactos
+  { title: 'Estado', key: 'state', sortable: true, width: 50 },
+  { title: 'Acciones', key: 'actions', sortable: false, width: 150, align: 'center' },
 ]
 </script>
 
@@ -1365,7 +1477,7 @@ const headers = [
                 icon
                 class="mb-1"
                 style="background-color: #3903fc !important; color: #fff;"
-                @click="openCreateDialog"
+                @click="openCreateDialog('Compras')"
               >
                 <VIcon
                   icon="tabler-plus"
@@ -1394,8 +1506,7 @@ const headers = [
                 icon
                 class="mb-1"
                 style="background-color: rgb(252, 3, 15) !important; color: #fff;"
-                readonly
-                @click="openCreateDialog"
+                @click="openCreateDialog('EntSal')"
               >
                 <VIcon
                   icon="tabler-plus"
@@ -1449,17 +1560,14 @@ const headers = [
         v-model:model-value="selectedRows"
         v-model:items-per-page="itemsPerPage"
         v-model:page="page"
-        density="compact"
         border-cells="true"
         show-select
-        :striped-rows="true"
         :headers="headers"
         :items="infoData"
         :search="searchQuery"
         item-value="id"
         item-key="id"
-        class="text-no-wrap text-body-2 grid-table"
-        dense
+        class="cell-wrap"
         @update:options="updateOptions"
       >
         <template #item.id="{ item }">
@@ -1469,25 +1577,25 @@ const headers = [
         </template>
 
         <template #item.report_date="{ item }">
-          <div class="text-column">
+          <div class="text-no-wrap text-column">
             {{ item.report_date }}
           </div>
         </template>
 
         <template #item.number="{ item }">
-          <div class="cell-wrap text-no-wrap text-column">
+          <div class="cell-wrap text-column">
             {{ item.number }}
           </div>
         </template>
 
         <template #item.concept_name="{ item }">
-          <div class="cell-wrap text-no-wrap text-column">
+          <div class="cell-no-wrap text-column">
             {{ item.concept_name }}
           </div>
         </template>
 
         <template #item.purchase_invoice="{ item }">
-          <div class="cell-wrap text-no-wrap text-column">
+          <div class="cell-wrap text-column">
             {{ item.purchase_invoice }}
           </div>
         </template>
@@ -1499,7 +1607,7 @@ const headers = [
         </template>
 
         <template #item.name="{ item }">
-          <div class="cell-wrap text-column text-no-wrap">
+          <div class="cell-wrap text-column">
             {{ item.name }}
           </div>
         </template>
@@ -1564,10 +1672,11 @@ const headers = [
             />
           </IconBtn>
           <IconBtn
-            :disabled="item.state === 'Activo'"
             density="compact"
             class="ma-0"
-            @click="confirmPurchases(item.id, item.purchase_invoice)"
+            @click="item.state !== 'Activo'
+              ? confirmPurchases(item.id, item.purchase_invoice, item)
+              : showDetailDocumentDialog(item)"
           >
             <VIcon
               icon="tabler-list-check"
@@ -1643,7 +1752,8 @@ const headers = [
           color="white"
           class="me-3"
         />
-        {{ newRecord.id ? 'Actualizando una Compra' : 'Agregando una Compra' }}
+        {{ (newRecord.type === 'Compras') ? 'Agregando una Compra' : 'Agregando una Entrada/Salida' }}
+        <!-- {{ newRecord.id ? 'Actualizando una Compra' : 'Agregando una Compra' }} -->
         <span
           class="text-h6 font-weight-bold ml-2"
           style="color: #f7fb2d !important;"
@@ -1695,6 +1805,7 @@ const headers = [
                   density="comfortable"
                   rounded="lg"
                   return-object
+                  autofocus
                   class="custom-autocomplete"
                   @update:model-value="onProveedorSeleccionado"
                 />
@@ -1707,7 +1818,6 @@ const headers = [
                 <AppTextField
                   v-model="newRecord.nit"
                   label="Nit/Cédula"
-                  autofocus
                   required
                   class="mb-2 text_size"
                   :rules="[rules.required]"
@@ -1783,7 +1893,7 @@ const headers = [
               >
                 <VAutocomplete
                   v-model="conceptoSeleccionado"
-                  :items="cptpurchases"
+                  :items="(newRecord.type === 'Compras') ? cptpurchases : cptes"
                   item-title="name"
                   label="Descripción del Concepto"
                   prepend-inner-icon="mdi-magnify"
@@ -1800,8 +1910,10 @@ const headers = [
                 md="2"
                 class="py-0"
               >
+                {{ newRecord.typereal }}
                 <AppSelect
                   v-model="newRecord.type_of_purchase"
+                  :disabled="newRecord.type !== 'Compras'"
                   :items="['Contado', 'Crédito']"
                   label="Tipo de Compra"
                   variant="outlined"
@@ -1851,6 +1963,7 @@ const headers = [
             />
 
             <VRow
+              v-show="(newRecord.type === 'Compras') ? true : false"
               dense
               align="center"
               class="g-2 mt-0"
@@ -1889,7 +2002,7 @@ const headers = [
                   density="comfortable"
                   variant="outlined"
                   hide-details
-                  type="number"
+                  @update:model-value="val => newRecord.purchase_invoice = val.replace(/\D/g, '')"
                 >
                   <template #prepend-inner>
                     <VIcon
@@ -1983,7 +2096,7 @@ const headers = [
                   hide-details
                   auto-grow
                   rows="3"
-                  @update:model-value="val => newRecord.address = val ? val.toUpperCase() : ''"
+                  @update:model-value="val => newRecord.observations = val ? val.toUpperCase() : ''"
                 >
                   <template #prepend-inner>
                     <VIcon
@@ -2007,6 +2120,7 @@ const headers = [
                 color="success"
                 variant="flat"
                 class="text-white"
+                width="120"
                 @click="showDialog = false"
               >
                 Cancelar
@@ -2015,6 +2129,8 @@ const headers = [
                 color="primary"
                 variant="flat"
                 class="text-white"
+                width="120"
+                :disabled="ValidarCrearDocumentos"
                 @click="saveRecord"
               >
                 Guardar
@@ -2041,12 +2157,12 @@ const headers = [
           color="white"
           class="me-3"
         />
-        {{ newRecord.id ? 'Actualizando Registros de la Factura de Compra' : 'Ingresando Productos de la Factura de Compra' }}
+        {{ newRecord.id ? 'Actualizando Registros del' : 'Ingresando Productos del ' }}
         <span
           class="text-h6 font-weight-bold ml-2"
           style="color: #f7fb2d !important;"
         >
-          Factura : {{ purchaseinvoice }}
+          Documento : {{ purchaseinvoice }} -- {{ tipoDctoDeInventario }}
         </span>
       </VCardTitle>
 
@@ -2096,7 +2212,6 @@ const headers = [
                   >
                     <VDataTable
                       :key="itemDetalle.length"
-                      v-model:items-per-page="itemsPerPage"
                       :headers="productHeaders"
                       :items="itemDetalle"
                       item-value="id"
@@ -2266,7 +2381,7 @@ const headers = [
                 </template>
               </VTooltip>
               <VTooltip
-                text="Guardar Compras"
+                text="Guardar Información"
                 location="top"
               >
                 <template #activator="{ props }">
@@ -2400,7 +2515,7 @@ const headers = [
     content-class="align-self-start mt-5"
   >
     <VCard>
-      <VCardTitle class="modal-title d-flex align-center text-h6 bg-error text-white py-3 px-4 mt-10 mb-0">
+      <VCardTitle class="modal-title d-flex align-center text-h6 bg-error text-white py-3 px-4 mt-0 mb-0">
         <VIcon
           icon="tabler-settings-plus"
           size="28"
@@ -2412,7 +2527,7 @@ const headers = [
           class="text-h6 font-weight-bold ml-2"
           style="color: #f7fb2d !important;"
         >
-          Factura : {{ purchaseinvoice }}
+          Documento : {{ purchaseinvoice }} -- {{ tipoDctoDeInventario }}
         </span>
       </VCardTitle>
 
@@ -2533,12 +2648,14 @@ const headers = [
               </VCol>
 
               <VCol
+                :disabled="(tipoDctoDeInventario !== 'Compras') ? true : false"
                 cols="12"
                 md="2"
                 class="py-0"
               >
                 <AppTextField
                   v-model="newRecordCargue.discount"
+                  :disabled="(tipoDctoDeInventario !== 'Compras') ? true : false"
                   label="(%) Dscto"
                   required
                   class="mb-2 text_size aligned-field"
@@ -2567,6 +2684,7 @@ const headers = [
               >
                 <AppTextField
                   v-model="newRecordCargue.vat"
+                  :disabled="(tipoDctoDeInventario !== 'Compras') ? true : false"
                   label="(%) Iva"
                   :rules="[rules.required]"
                   class="mb-2 text_size aligned-field"
@@ -2791,6 +2909,124 @@ const headers = [
       </VCardActions>
     </VCard>
   </VDialog>
+
+  <VDialog
+    max-width="1200px"
+    :model-value="showDetailsDialog"
+    persistent
+    @update:model-value="emit('update:dialogotrop', $event)"
+  >
+    <VCard
+      class="rounded-xs mb-1 border-accent d-flex flex-column"
+      elevation="3"
+      border="2"
+    >
+      <VCardTitle class="modal-title d-flex align-center text-h6 bg-success pa-4">
+        <VIcon
+          icon="tabler-list-details"
+          size="28"
+          color="white"
+          class="me-3"
+        />
+        Detalle del Documento -- {{ NombreDelProveedor }}
+        <span
+          class="text-h6 font-weight-bold ml-2"
+          style="color: #f7fb2d !important;"
+        />
+      </VCardTitle>
+      <section>
+        <VCard id="grid-list">
+          <VDivider />
+          <VDataTable
+            :headers="Headers_Details"
+            :items=" DetailsDocument"
+            item-value="idLinea"
+            density="compact"
+            :items-per-page="-1"
+            hide-default-footer
+            class="products-gridc border rounded"
+            :height="$vuetify.display.height < 800 ? 370 : 470"
+            striped="even"
+            fixed-header
+          >
+            <template #item.id="{ item }">
+              <div class="cell-wrap text-column">
+                {{ item.id }}
+              </div>
+            </template>
+
+            <template #item.code="{ item }">
+              <div class="cell-wrap text-column">
+                {{ item.code }}
+              </div>
+            </template>
+
+            <template #item.name="{ item }">
+              <div class="cell-wrap text-column">
+                {{ item.name }}
+              </div>
+            </template>
+
+            <template #item.store="{ item }">
+              <div class="cell-wrap text-column">
+                {{ item.store }}
+              </div>
+            </template>
+
+            <template #item.concept_inv="{ item }">
+              <div class="cell-wrap text-column">
+                {{ item.concept_inv }}
+              </div>
+            </template>
+
+            <template #item.amount="{ item }">
+              <div class="cell-wrap text-column">
+                {{ formatCurrency(item.amount, 2) }}
+              </div>
+            </template>
+
+            <template #item.discount1="{ item }">
+              <div class="cell-wrap text-column">
+                {{ formatCurrency(item.discount1, 2) }}
+              </div>
+            </template>
+
+            <template #item.vat="{ item }">
+              <div class="cell-wrap text-column">
+                {{ formatCurrency(item.vat, 0) }}
+              </div>
+            </template>
+
+            <template #item.unit_cost="{ item }">
+              <div class="cell-wrap text-column">
+                {{ formatCurrency(item.unit_cost, 0) }}
+              </div>
+            </template>
+
+            <template #item.subtotal="{ item }">
+              <div class="cell-wrap text-column">
+                {{ formatCurrency(item.subtotal, 0) }}
+              </div>
+            </template>
+          </VDataTable>
+        </VCard>
+      </section>
+      <VCardActions>
+        <VSpacer />
+
+        <VBtn
+          width="100"
+          min-width="0"
+          color="error"
+          variant="flat"
+          class="mt-3"
+          @click="closedet"
+        >
+          Cancelar
+        </VBtn>
+      </VCardActions>
+    </vcard>
+  </vdialog>
 </template>
 
 <style lang="scss">
@@ -2813,7 +3049,7 @@ const headers = [
       background-color: rgb(247, 58, 206) !important;
 
       /* Cambia el color de los iconos de flecha y números */
-      // color: #0EE920 !important;
+      color: #0ee920 !important;
 
       .v-icon {
         color: rgb(250, 253, 245) !important;
@@ -2839,8 +3075,6 @@ const headers = [
   font-size: 0.85em;
   line-height: 1.3;         /* mejora legibilidad */
   overflow-wrap: break-word;
-
-  // max-width: 600px;         /* ancho fijo */
   white-space: normal; /* permite salto de línea */
   word-wrap: break-word;    /* divide palabras largas */
 }
@@ -2850,17 +3084,9 @@ const headers = [
   font-size: 0.78em;
   line-height: 1.3;         /* mejora legibilidad */
   overflow-wrap: break-word;
-
-  // max-width: 600px;         /* ancho fijo */
   white-space: normal; /* permite salto de línea */
   word-wrap: break-word;    /* divide palabras largas */
 }
-
-/* Evita que el resto de columnas se vean afectadas */
-// .company-table :deep(td),
-// .company-table :deep(th) {
-//   white-space: nowrap;
-// }
 
 /* 🌟 Bordes verticales para VDataTableServer */
 thead th {
@@ -2946,12 +3172,8 @@ textarea {
 .column_date_size {
   font-size: 0.9em;
   line-height: 1.3;         /* mejora legibilidad */
-
-  // min-height: 56px!important;
   margin-block-start: 0 !important;
   padding-block-start: 0 !important;
-
-  // width: 20em !important;
   white-space: normal !important; /* permite salto de línea */
 }
 
@@ -2980,11 +3202,6 @@ textarea {
 .row-uniform-margin > .v-col > * {
   margin-block-start: 12px !important; /* o el valor que quieras */
 }
-
-//   .v-col {
-//   display: flex;
-//   align-items: center;
-// }
 
 /* Corrige el colapso del VSelect y lo nivela con el AppTextField */
 :deep(.custom-select-height .v-field) {
@@ -3185,6 +3402,19 @@ textarea {
 .products-gridc tbody tr:hover {
   background-color: #eee !important;
 }
+
+.text-column {
+   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif, sans-serif;
+   font-size: 0.8em;
+   line-height: 1 !important;
+   margin-block-start: 1 !important;
+ }
+
+@media (max-width: 1400px) {
+  :deep(.v-data-table) {
+    font-size: 0.85em !important;
+  }
+}
 </style>
 
 <style>
@@ -3228,8 +3458,4 @@ textarea {
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
- .text-column {
-   font-family: italic, sans-serif;
-   font-size: 0.68rem;
- }
 </style>
