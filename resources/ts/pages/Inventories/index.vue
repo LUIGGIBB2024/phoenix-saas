@@ -1432,7 +1432,7 @@ const headers = [
     width: 150,
     align: 'center',
     cellProps: {
-      style: 'padding: 0 10px !important;',
+      style: 'padding: 0 5px !important;',
     },
   },
 ]
