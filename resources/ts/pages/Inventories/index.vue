@@ -2279,25 +2279,28 @@ const headers = [
                       </template>
 
                       <template #item.actions="{ item }">
-                        <IconBtn
-                          density="compact"
-                          @click="openEditCargues(item)"
-                        >
-                          <VIcon
-                            icon="tabler-edit"
-                            color="primary"
-                          />
-                        </IconBtn>
+                        <!-- Contenedor Flexbox para forzar la alineación horizontal -->
+                        <div class="d-flex align-center ga-1 text-no-wrap">
+                          <IconBtn
+                            density="compact"
+                            @click="openEditCargues(item)"
+                          >
+                            <VIcon
+                              icon="tabler-edit"
+                              color="primary"
+                            />
+                          </IconBtn>
 
-                        <IconBtn
-                          density="compact"
-                          @click="confirmDeleteCompras(item.id)"
-                        >
-                          <VIcon
-                            icon="tabler-trash"
-                            color="error"
-                          />
-                        </IconBtn>
+                          <IconBtn
+                            density="compact"
+                            @click="confirmDeleteCompras(item.id)"
+                          >
+                            <VIcon
+                              icon="tabler-trash"
+                              color="error"
+                            />
+                          </IconBtn>
+                        </div>
                       </template>
                     </VDataTable>
                   </VCol>
