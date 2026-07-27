@@ -1415,7 +1415,7 @@ const headers = [
     cellProps: { class: 'd-none d-lg-table-cell' },
     headerProps: { class: 'd-none d-lg-table-cell' },
   },
-  { title: 'Nombre del Tercero', key: 'name', sortable: true, width: 200 },
+  { title: 'Nombre del Tercero', key: 'name', sortable: true, width: 180 },
 
   // Corregido 'aling' -> 'align'
   { title: 'SubTotal', key: 'subtotal', sortable: true, width: 65, align: 'end' },
