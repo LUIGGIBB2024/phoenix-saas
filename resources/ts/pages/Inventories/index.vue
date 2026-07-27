@@ -1425,7 +1425,16 @@ const headers = [
   { title: 'Total', key: 'total_purchases', sortable: true, width: 70, align: 'end' },
 
   { title: 'Estado', key: 'state', sortable: true, width: 50 },
-  { title: 'Acciones', key: 'actions', sortable: false, width: 150, align: 'center' },
+  {
+    title: 'Acciones',
+    key: 'actions',
+    sortable: false,
+    width: 150,
+    align: 'center',
+    cellProps: {
+      style: 'padding: 0 10px !important;',
+    },
+  },
 ]
 </script>
 
