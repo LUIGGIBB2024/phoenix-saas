@@ -7,8 +7,14 @@ import { VBtn } from 'vuetify/components/VBtn'
 import { VCard, VCardActions, VCardText, VCardTitle } from 'vuetify/components/VCard'
 import { VDivider } from 'vuetify/components/VDivider' // <-- Corregido: Ruta específica para VDivider
 import { VCol } from 'vuetify/components/VGrid'
+import ConsultarMovimientosDialog from './vdialogs/ConsultarMovimientosDialog.vue'
 
 // import type { Product } from './type'
+
+const showDetailsMovements = ref(false)
+const DescripcionDelProducto = ref('')
+const consultarMovementsDialog = ref<InstanceType<typeof ConsultarMovimientosDialog> | null>(null)
+const selectedProduct = ref([])
 
 const archivos = ref<File[]>([])
 
@@ -31,6 +37,7 @@ function onFileChange(e: Event) {
 // 🔹 Filtros y variables de estado
 const searchQuery = ref('')
 const selectedRows = ref([])
+const detailsmov = ref([])
 
 // 🔹 Opciones del datatable
 const itemsPerPage = ref(10)
@@ -666,6 +673,45 @@ const costField = useNumericField(newRecord, 'cost')
 const factField = useNumericField(newRecord, 'conversion_factor')
 const weightField = useNumericField(newRecord, 'weight_volume')
 const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
+
+const ShowDetailMovemenstDialog = async (item: any) => {
+  selectedProduct.value = item
+
+  // NombreDelProveedor.value = item.name
+  // console.log('Id Company:', localStorage.getItem('company_id'))
+
+  // showDetailsPayment.value = true
+
+  const urlbase = '/api/products-movements'
+  try {
+    // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
+    const { data } = await axios.post(urlbase, {
+      url_token: localStorage.getItem('auth_token'),
+      company_id: localStorage.getItem('company_id'),
+      product: selectedProduct.value,
+      page: page.value,
+      per_page: itemsPerPage.value,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+    )
+
+    DescripcionDelProducto.value = `${item.name} - ${item.code}`
+
+    // invoiceDetData.value = data
+    console.log('Respuesta Producto :', data)
+    detailsmov.value = data.detailsmov
+
+    // console.log('Soy Nombre del Proveedor: ', NombreDelProveedor.value)
+
+    showDetailsMovements.value = true
+    consultarMovementsDialog.value?.open()
+  }
+  catch (error) {
+    console.error(error)
+  }
+}
 </script>
 
 <template>
@@ -820,6 +866,16 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
               :color="tipodeusuario === 'Operador' ? 'grey' : 'error'"
             />
           </IconBtn>
+          <IconBtn
+            density="compact"
+            class="ma-0"
+            @click="ShowDetailMovemenstDialog(item)"
+          >
+            <VIcon
+              icon="tabler-list-check"
+              :color="item.state !== 'Activo' ? 'error' : 'success'"
+            />
+          </IconBtn>
         </template>
 
         <template #bottom>
@@ -874,6 +930,13 @@ const unitxpackField = useNumericField(newRecord, 'units_per_packaging')
 
     <!-- 🌟 Popup Modal para nueva empresa -->
   </section>
+
+  <ConsultarMovimientosDialog
+    ref="consultarMovementsDialog"
+    v-model:dialogmovement="showDetailsMovements"
+    :detailsmov="detailsmov"
+    :titledetails="DescripcionDelProducto"
+  />
 
   <VDialog
     v-model="showDialog"

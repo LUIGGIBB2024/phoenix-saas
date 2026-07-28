@@ -5,9 +5,9 @@ import { VIcon } from 'vuetify/components'
 import { VCard, VCardText } from 'vuetify/components/VCard'
 import { VCol } from 'vuetify/components/VGrid'
 import type { CxPPayment } from './components/CrearEgresosDialog.vue' // Ajusta la ruta de tu diálogo
-import ConsultarEgresosFacturasDialog from './vdialogs/ConsultarEgresosFacturasDialog.vue'
-import ConsultarEgresosOtrosPagosDialog from './vdialogs/ConsultarEgresosOtrosPagosDialog.vue'
-import CrearEgresosDialog from './vdialogs/CrearEgresosDialog.vue'
+// import ConsultarEgresosFacturasDialog from './vdialogs/ConsultarEgresosFacturasDialog.vue'
+// import ConsultarEgresosOtrosPagosDialog from './vdialogs/ConsultarEgresosOtrosPagosDialog.vue'
+// import CrearEgresosDialog from './vdialogs/CrearEgresosDialog.vue'
 
 const emit = defineEmits(['save', 'close'])
 const isDialogOpen = ref(false)
@@ -820,11 +820,11 @@ const headers = [
     cellProps: { class: 'd-none d-lg-table-cell' },
     headerProps: { class: 'd-none d-lg-table-cell' },
   },
-  { title: 'Nombre del Tercero', key: 'supplier_name', sortable: true },
-  { title: 'Tipo de Egreso', key: 'payment_type', sortable: true },
+  { title: 'Nombre del Cliente', key: 'supplier_name', sortable: true },
+  { title: 'Tipo de Recibo', key: 'payment_type', sortable: true },
 
   // Columnas numéricas con un ancho fijo prudente
-  { title: 'Valor Egreso', key: 'value_cxp', sortable: true, width: 80, aling: 'end' },
+  { title: 'Valor Recibo', key: 'value_cxp', sortable: true, width: 80, aling: 'end' },
   { title: 'Estado', key: 'state', sortable: true, width: 90 },
   { title: 'Acciones', key: 'actions', sortable: false, width: 120, aling: 'center' }, // Espacio optimizado para tus 3 IconBtn compactos
 ]
@@ -908,7 +908,7 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
         class="d-flex align-left flex-column"
       >
         <h4 class="text-primary mb-2">
-          Movimientos de Egresos
+          Movimientos de RcCaja
           <span>
             : (<strong class="text-success">{{ process_year }}</strong>)
           </span>

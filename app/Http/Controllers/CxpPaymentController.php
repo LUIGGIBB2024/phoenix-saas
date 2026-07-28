@@ -449,6 +449,7 @@ class CxpPaymentController extends Controller
         $conceptpay = PaymentConcept::where('type', 'Proveedores')->where('companies_id', $companyId)->get();
         $document = DetailCxpPayment::select(
             'detail_cxp_payments.id',
+            'detail_cxp_payments.id',
             'cxp_payment_id',
             'purchases_invoice_id',
             'consecutive',
@@ -493,6 +494,7 @@ class CxpPaymentController extends Controller
         $iddocument = $request['document']['id'];
 
         $document = DetailCxpOthersPayment::select(
+            'detail_cxp_others_payments.id',
             'detail_cxp_others_payments.cxp_payment_id',
             'consecutive',
             'document',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventoryMovement;
 use App\Models\MiscellaneousItem;
 use App\Models\PriceDetail;
 use App\Models\Product;
@@ -295,5 +296,72 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json(['message' => 'Producto Eliminado Exitosamente']);
+    }
+
+    public function getProductsMovements(Request $request): JsonResponse
+    {
+        $companies_id = $request->input('company_id');
+        $codigoproducto = $request['product']['code'];
+        $details = InventoryMovement::select(
+            'inventory_movements.id',
+            'inventory_movements.code',
+            'inventory_movements.name',
+            'store',
+            'batch',
+            'number',
+            'prefix',
+            'concept_inv',
+            'concept_class',
+            'inventory_movements.nit',
+            'inventory_movements.nit2',
+            'inventory_movements.branch',
+            'health_batch',
+            'plate',
+            'serial',
+            'amount',
+            'amount1',
+            'vat',
+            'discount1',
+            'discount2',
+            'discount3',
+            'unit_cost',
+            'sale_price',
+            'parcial_value',
+            'inventory_movements.type',
+            'inventory_movements.idregister',
+            'inventory_movements.state',
+            'state01',
+            'state02',
+            'state03',
+            'inventory_movements.companies_id',
+            'inventory_movements.inventory_documents_id',
+        )
+            ->selectRaw("DATE_FORMAT(inventory_movements.report_date, '%Y-%m-%d') as report_date")
+            ->selectRaw("m.name as concept_name,  COALESCE(NULLIF(n.name, ''), o.name) as supplier_name, o.name as customer_name")
+            // ->selectRaw("m.name as concept_name, n.name as supplier_name, o.name customer_name")
+            ->leftJoin('inventory_concepts as m', function ($join) use ($companies_id) {
+                $join->on('m.code', '=', 'inventory_movements.concept_inv')
+                    ->where('m.companies_id', $companies_id);
+            })
+            ->leftJoin('suppliers as n', function ($join) use ($companies_id) {
+                $join->on('n.nit', '=', 'inventory_movements.nit')
+                    ->on('n.branch', '=', 'inventory_movements.branch')
+                    ->where('m.companies_id', $companies_id);
+            })
+            ->leftJoin('customers as o', function ($join) use ($companies_id) {
+                $join->on('o.nit', '=', 'inventory_movements.nit')
+                    ->on('o.branch', '=', 'inventory_movements.branch')
+                    ->where('o.companies_id', $companies_id);
+            })
+            ->where('inventory_movements.companies_id', $companies_id)
+            ->where('inventory_movements.code', $codigoproducto)
+            ->orderBy('report_date', 'DESC')
+            ->get();
+
+        return response()->json([
+            'message' => 'Consulta de Productos Generada Exitosamente',
+            'detailsmov' =>  $details,
+
+        ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 }

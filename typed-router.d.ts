@@ -268,6 +268,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'egresos-vdialogs-consultar-egresos-facturas-dialog': RouteRecordInfo<
+      'egresos-vdialogs-consultar-egresos-facturas-dialog',
+      '/egresos/vdialogs/ConsultarEgresosFacturasDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'egresos-vdialogs-consultar-egresos-otros-pagos-dialog': RouteRecordInfo<
+      'egresos-vdialogs-consultar-egresos-otros-pagos-dialog',
+      '/egresos/vdialogs/ConsultarEgresosOtrosPagosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'egresos-vdialogs-crear-egresos-dialog': RouteRecordInfo<
       'egresos-vdialogs-crear-egresos-dialog',
       '/egresos/vdialogs/CrearEgresosDialog',
@@ -401,9 +415,23 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'products-vdialogs-consultar-movimientos-dialog': RouteRecordInfo<
+      'products-vdialogs-consultar-movimientos-dialog',
+      '/products/vdialogs/ConsultarMovimientosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'recepciondefacturas': RouteRecordInfo<
       'recepciondefacturas',
       '/recepciondefacturas',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'recibosdecaja': RouteRecordInfo<
+      'recibosdecaja',
+      '/recibosdecaja',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -666,6 +694,18 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'resources/ts/pages/egresos/vdialogs/ConsultarEgresosFacturasDialog.vue': {
+      routes:
+        | 'egresos-vdialogs-consultar-egresos-facturas-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/egresos/vdialogs/ConsultarEgresosOtrosPagosDialog.vue': {
+      routes:
+        | 'egresos-vdialogs-consultar-egresos-otros-pagos-dialog'
+      views:
+        | never
+    }
     'resources/ts/pages/egresos/vdialogs/CrearEgresosDialog.vue': {
       routes:
         | 'egresos-vdialogs-crear-egresos-dialog'
@@ -780,9 +820,21 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'resources/ts/pages/products/vdialogs/ConsultarMovimientosDialog.vue': {
+      routes:
+        | 'products-vdialogs-consultar-movimientos-dialog'
+      views:
+        | never
+    }
     'resources/ts/pages/recepciondefacturas/index.vue': {
       routes:
         | 'recepciondefacturas'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/index.vue': {
+      routes:
+        | 'recibosdecaja'
       views:
         | never
     }

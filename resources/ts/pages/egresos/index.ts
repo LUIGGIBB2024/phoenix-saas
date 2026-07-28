@@ -153,3 +153,55 @@ export interface OtherPayments {
   calculate: string
   suppliers_id: number
 }
+
+export interface CheckInvoicePayments {
+  id: number
+  consecutive: number
+  document: string
+  nit: string
+  branch: string
+  report_date: string | Date
+  concept: string
+  concept_name: string
+  invoice: number
+  prefix: string
+  invoicedcto: string
+  quota: number
+  payment_amount: string | number
+  calculate: string
+  state: string
+  state01?: string
+  state02?: string
+  state03?: string
+  suppliers_id: number
+  companies_id: number
+}
+
+export interface CheckOtherExpenses {
+  id?: number
+  cxp_payment_id: number
+  consecutive: number
+  document: string
+  nit: string
+  branch: string
+  report_date: string | Date
+  internaldoc: string
+  concept: string
+  concept_name: string
+  accounting_code: string
+  center: string
+  scenter: string
+  proyect: string
+  sproyect: string
+  activity: string
+  payment_amount: string | number
+  idregister: number
+  calculate: string
+  state: string
+  state01?: string
+  state02?: string
+  state03?: string
+  suppliers_id: number
+  suppliers_name: string
+  companies_id: number
+}

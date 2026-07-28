@@ -1328,7 +1328,7 @@ function Totalizar_Compra(): void {
 // 🔹 Abrir modal en modo edición
 const showDetailDocumentDialog = async (item: any) => {
   selectedDocument.value = item
-  NombreDelProveedor.value = item.name
+  NombreDelProveedor.value = `${item.name} - Nro:${item.number} - ${item.concept_name}`
   console.log('Id Company:', localStorage.getItem('company_id'))
   showDetailsDialog.value = true
   try {
@@ -1432,7 +1432,7 @@ const headers = [
     width: 150,
     align: 'center',
     cellProps: {
-      style: 'padding: 0 5px !important;',
+      style: 'padding: 0 0px !important;',
     },
   },
 ]

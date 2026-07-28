@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ControlController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CxcPaymentController;
 use App\Http\Controllers\CxpPaymentController;
 use App\Http\Controllers\DianController;
 use App\Http\Controllers\DianEventController;
@@ -112,6 +113,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/products', [ProductController::class, 'store']);
     Route::post('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    Route::post('/products-movements', [ProductController::class, 'getProductsMovements']);
 
     Route::get('/getcustomers', [CustomerController::class, 'getCustomers']);
     Route::post('/customers', [CustomerController::class, 'store']);
@@ -143,6 +145,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/supplierpayment-details', [CxpPaymentController::class, 'storedetails']);
     Route::post('/getpayments-detail', [CxpPaymentController::class, 'getPaymentsDetail']);
     Route::post('/getpayments-detail-othr', [CxpPaymentController::class, 'getPaymentsDetailothr']);
+
+    Route::get('/getcustomerpayments', [CxcPaymentController::class, 'getCustomerPayments']);
 });
 
 Route::post('/dian/recibir-token', [DianController::class, 'recibirToken']);
