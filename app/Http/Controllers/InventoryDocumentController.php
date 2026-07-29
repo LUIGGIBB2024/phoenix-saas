@@ -298,28 +298,57 @@ class InventoryDocumentController extends Controller
                 $subtotal = round($quantity * $cost, 0) - $valuedsc;
 
                 // Calcular Costos Promedios
+                $cptodet   = InventoryConcept::where('code', $concept)->where('companies_id', $companyId)->first();
                 $saldos     = InventoryBalance::where('year', $year)->where('code', $code)->where('store', $store)->where('companies_id', $companyId)->first();
                 $producto   = Product::where('code', $code)->where('companies_id', $companyId)->first();
                 $nombreCampo = 'cost' . Carbon::parse($fecha)->format('m');
 
+                $CostoActual = 0;
+                if (!$saldos) {
+                    $saldonew = new InventoryBalance();
+                    $saldonew->year  = $year;
+                    $saldonew->code  = $code;
+                    $saldonew->store = $store;
+                    $saldonew->companies_id = $companyId;
+                    $saldonew->previous_balance = 0;
+                    $saldonew->batch = '';
+                    $saldonew->products_id = $producto->id;
+                    $saldonew->save();
 
-                $CostoActual    = $saldos->quantity * $saldos->cost;
-                $CostoDcto      = $quantity *  $cost;
-                $CostoPromedio  = ($CostoActual +  $CostoDcto) / ($saldos->quantity + $quantity);
-                $saldos->lastcost = $saldos->cost;
-                $saldos->quantity += $quantity;
-                $saldos->cost   = $CostoPromedio;
+                    $saldos     = InventoryBalance::where('year', $year)->where('code', $code)->where('store', $store)->where('companies_id', $companyId)->first();
+                }
+                $CostoPromedio = 0;
+
+                if (trim($cptodet->documents) == 'Compras' || trim($cptodet->documents) == 'Otras Entradas') {
+                    $CostoActual    = $saldos->quantity * $saldos->cost;
+                    $CostoDcto      = $quantity *  $cost;
+                    $CostoPromedio  = ($CostoActual +  $CostoDcto) / ($saldos->quantity + $quantity);
+                    $saldos->lastcost = $saldos->cost;
+                    $saldos->quantity += $quantity;
+                    $saldos->cost   = $CostoPromedio;
+                } else {
+
+                    $saldos->quantity -= $quantity;
+                }
+
+
 
                 // Actualizar Costo en el Mes de Proceso
-                if (in_array($nombreCampo, ['cost00', 'cost01', 'cost02', 'cost03', 'cost04', 'cost05', 'cost06', 'cost07', 'cost08', 'cost09', 'cost10', 'cost11', 'cost12'])) {
+                if (
+                    in_array($nombreCampo, ['cost00', 'cost01', 'cost02', 'cost03', 'cost04', 'cost05', 'cost06', 'cost07', 'cost08', 'cost09', 'cost10', 'cost11', 'cost12'])
+                    && (trim($cptodet->documents) == 'Compras' || trim($cptodet->documents) == 'Otras Entradas')
+                ) {
                     $saldos->$nombreCampo = $CostoPromedio;
                 }
 
                 $saldos->save();
 
                 // Actualizar Información de Costos en la Tabla de Productos
-                $producto->cost = $CostoPromedio;
-                $producto->save();
+                if ($cptodet->documents == 'Compras' || $cptodet->documents == 'Otras Entradas') {
+                    $producto->cost = $CostoPromedio;
+                    $producto->save();
+                }
+
 
                 try {
                     $reg_fact = InventoryMovement::updateOrCreate(

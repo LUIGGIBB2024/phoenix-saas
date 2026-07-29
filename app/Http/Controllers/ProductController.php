@@ -355,7 +355,8 @@ class ProductController extends Controller
             })
             ->where('inventory_movements.companies_id', $companies_id)
             ->where('inventory_movements.code', $codigoproducto)
-            ->orderBy('report_date', 'DESC')
+            ->orderBy('inventory_movements.report_date', 'DESC')
+            ->orderBy('inventory_movements.created_at', 'DESC')
             ->get();
 
         return response()->json([

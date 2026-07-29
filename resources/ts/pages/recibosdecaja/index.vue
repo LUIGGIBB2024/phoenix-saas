@@ -15,15 +15,15 @@ const egresosList = ref([])
 const isSaving = ref(false)
 
 const selectedDocument = ref('')
-const NombreDelProveedor = ref('')
+const NombreDelCliente = ref('')
 const DocumentoSeleccionado = ref('')
 
 // 1. Declaramos la variable reactiva
 const tipoDeEgreso = ref<string>('')
 
-const crearEgresoDialog = ref<InstanceType<typeof CrearEgresosDialog> | null>(null)
-const consultarEgresosDialog = ref<InstanceType<typeof ConsultarEgresosFacturasDialog> | null>(null)
-const consultarEgresosOtrosDialog = ref<InstanceType<typeof ConsultarEgresosOtrosPagosDialog> | null>(null)
+const crearRecibosoDialog = ref<InstanceType<typeof CrearEgresosDialog> | null>(null)
+const consultarRecibosDialog = ref<InstanceType<typeof ConsultarEgresosFacturasDialog> | null>(null)
+const consultarRecibosOtrosDialog = ref<InstanceType<typeof ConsultarEgresosOtrosPagosDialog> | null>(null)
 
 // import type { Product } from './type'
 
@@ -209,7 +209,7 @@ const snackbarColor = ref('success')
 const responseData = ref({
   data: [],
   payments: [],
-  suppliers: [],
+  customers: [],
   sources: [],
   otherexpenses: [],
   docspayments: [],
@@ -222,7 +222,7 @@ const responseData = ref({
 
 // 🔹 Diálogo de confirmación de eliminación
 const payments = ref([])
-const suppliers = ref([])
+const customers = ref([])
 const otherexpenses = ref([])
 const sources = ref([])
 const docspayments = ref([])
@@ -300,7 +300,7 @@ watch(showDialog, isOpen => {
 
 const loadInfo = async () => {
   try {
-    const response = await axios.get('/api/getsupplierpayments', {
+    const response = await axios.get('/api/getcustomerpayments', {
       params: {
         q: searchQuery.value,
         itemsPerPage: itemsPerPage.value,
@@ -317,7 +317,7 @@ const loadInfo = async () => {
     responseData.value = response.data
 
     payments.value = responseData.value.data
-    suppliers.value = responseData.value.suppliers
+    customers.value = responseData.value.customers
     sources.value = responseData.value.sources
     docspayments.value = responseData.value.docspayments
     docspaymentsothers.value = responseData.value.docspaymentsothers
@@ -460,7 +460,7 @@ const openCreateDialog = (tipo: string) => {
     center: '',
     activity: '',
     companies_id: 1,
-    suppliers_id: null,
+    customers_id: null,
     created_at: hoy,
     updated_at: hoy,
     usercreate: 'System',
@@ -505,7 +505,7 @@ const openCreateDialogOther = (tipo: string) => {
     center: '',
     activity: '',
     companies_id: 1,
-    suppliers_id: null,
+    customers_id: null,
     created_at: hoy,
     updated_at: hoy,
     usercreate: 'System',
@@ -545,7 +545,7 @@ const cargarproductosDialog = () => {
 
 // 🔹 Abrir confirmación de eliminación
 const confirmDelete = (id: number) => {
-  console.log('🛑 Confirmar eliminación del Proveedor ID:', id)
+  console.log('🛑 Confirmar eliminación del Cliente ID:', id)
   recordToDelete.value = id
   nameRecordToDelete.value = infoData.value.find(c => c.id === id)?.name || ''
   showConfirmDialog.value = true
@@ -583,7 +583,7 @@ const deleteRecord = async () => {
     return
 
   try {
-    await $api(`/api/suppliers/${recordToDelete.value}`, {
+    await $api(`/api/customers/${recordToDelete.value}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
@@ -591,12 +591,12 @@ const deleteRecord = async () => {
       },
     })
     loadInfo()
-    snackbarMessage.value = '✅ Proveedor eliminado correctamente'
+    snackbarMessage.value = '✅ Cliente eliminado correctamente'
     snackbarColor.value = 'success'
   }
   catch (error) {
-    console.error('❌ Error al eliminar el Proveedor:', error)
-    snackbarMessage.value = '❌ Error al eliminar el Proveedor'
+    console.error('❌ Error al eliminar el Cliente:', error)
+    snackbarMessage.value = '❌ Error al eliminar el Cliente'
     snackbarColor.value = 'error'
   }
   finally {
@@ -845,7 +845,7 @@ function onEgresoGuardado({ esEdicion, registro }: { esEdicion: boolean; registr
 
 const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
   selectedDocument.value = item
-  NombreDelProveedor.value = item.name
+  NombreDelCliente.value = item.name
   console.log('Id Company:', localStorage.getItem('company_id'))
 
   // showDetailsPayment.value = true
@@ -865,13 +865,13 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
     },
     )
 
-    NombreDelProveedor.value = `${item.supplier_name} - Egreso No:${item.consecutive} - (${paymenttype})`
+    NombreDelCliente.value = `${item.supplier_name} - Egreso No:${item.consecutive} - (${paymenttype})`
 
     // invoiceDetData.value = data
     console.log('Respuesta DetDocument :', data)
     details.value = data.details
 
-    // console.log('Soy Nombre del Proveedor: ', NombreDelProveedor.value)
+    // console.log('Soy Nombre del Cliente: ', NombreDelCliente.value)
 
     if (paymenttype === 'PagosFacturas') {
       showDetailsPayment.value = true
@@ -1168,7 +1168,7 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
 
   <CrearEgresosDialog
     ref="crearEgresoDialog"
-    :suppliers="suppliers"
+    :customers="customers"
     :tipo-de-egreso="tipoDeEgreso"
     :sources="sources"
     :otherexpenses="otherexpenses"
@@ -1182,14 +1182,14 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
     ref="consultarEgresosDialog"
     v-model:dialogdetpayment="showDetailsPayment"
     :details="details"
-    :titledetails="NombreDelProveedor"
+    :titledetails="NombreDelCliente"
   />
 
   <ConsultarEgresosOtrosPagosDialog
     ref="consultarEgresosOtrosDialog"
     v-model:dialogotherpayment="showDetailsOtherPayment"
     :detailsothr="detailsothr"
-    :titledetails="NombreDelProveedor"
+    :titledetails="NombreDelCliente"
   />
 
   <!-- ❗ Diálogo de confirmación de eliminación -->
