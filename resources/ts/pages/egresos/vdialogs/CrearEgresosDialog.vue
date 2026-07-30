@@ -11,6 +11,8 @@ const props = withDefaults(defineProps<Props>(), {
   suppliers: () => [],
   infoegreso: () => [],
   otherexpenses: () => [],
+  paymentcpt: () => [],
+
 })
 
 // 2. Declaramos las props con valores por defecto nativos de TS usando withDefaults
@@ -117,7 +119,8 @@ onMounted(() => {
   proveedorSeleccionado.value = null
   documentoSeleccionado.value = null
   origenSeleccionado.value = null
-  //console.log('Soy Tipo de Egreso :', props.tipoDeEgreso)
+
+  // console.log('Soy Tipo de Egreso :', props.tipoDeEgreso)
 
   if (props.tipoDeEgreso === 'Pagos de Facturas')
     ValidarCrearEgresos.value = '!proveedorSeleccionado || !origenSeleccionado || !editedItem.value_cxp || !documentoSeleccionado ? true : false'
@@ -691,7 +694,7 @@ function cerrarAmbosDialogs() {
                   hide-details
                   auto-grow
                   rows="3"
-                  @update:model-value="val => editedItem.observactions = val ? val.toUpperCase() : ''"
+                  @update:model-value="val => editedItem.observations = val ? val.toUpperCase() : ''"
                 >
                   <template #prepend-inner>
                     <VIcon

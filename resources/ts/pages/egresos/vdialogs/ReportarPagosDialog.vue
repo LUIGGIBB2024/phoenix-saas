@@ -51,6 +51,14 @@ interface Props {
 const itemDetalleFact = ref<PurchaseInvoiceReport[]>([])
 const pagosTemporal = ref<DetallePago[]>([])
 
+const totalCapturado = computed(() => {
+  return pagosTemporal.value.reduce((acc, pago) => {
+    const signo = pago.tipo_calculo === 'Suma' ? 1 : -1
+
+    return acc + (pago.valor * signo)
+  }, 0)
+})
+
 // 4. Asignamos el valor usando props.itemsdetallefact (SIN .value)
 onMounted(() => {
   if (props.itemsdetallefact) {
@@ -99,6 +107,7 @@ function AgregarPagosDirectos(factura: PurchaseInvoiceReport) {
     const tienePagosEstaFactura = pagosTemporal.value.some(pago => pago.factura_id === factura.id)
 
     // 2. Si no tiene registros previos para esta factura y existen conceptos
+    console.log('Soy tienePagosEstaFactura:', tienePagosEstaFactura, ' Soy lenght props.paymentcpt?.length: ', props.paymentcpt?.length)
     if (!tienePagosEstaFactura && props.paymentcpt?.length) {
       const nuevosPagos = props.paymentcpt.map(item => ({
         id: crypto.randomUUID(),
@@ -113,6 +122,7 @@ function AgregarPagosDirectos(factura: PurchaseInvoiceReport) {
       }))
 
       // 3. Añadimos los nuevos registros manteniendo los de las demás facturas
+      console.log('Agregue una registro a pagosTemporal')
       pagosTemporal.value.push(...nuevosPagos)
     }
 
@@ -155,14 +165,6 @@ function AgregarPagosDirectos(factura: PurchaseInvoiceReport) {
     console.log(console.log('Valor Pago - 220:', valorpago.value, ' Saldo Actual:', saldoactual, ' valora Factura:', factura.valor_factura, 'Aplicación:', totalCapturado.value, 'Conceptos:', props.paymentcpt))
   }
 }
-
-const totalCapturado = computed(() => {
-  return pagosTemporal.value.reduce((acc, pago) => {
-    const signo = pago.tipo_calculo === 'Suma' ? 1 : -1
-
-    return acc + (pago.valor * signo)
-  }, 0)
-})
 
 function cerrar() {
   emit('update:modelValue', false)
