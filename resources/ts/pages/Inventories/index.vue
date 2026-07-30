@@ -1401,9 +1401,9 @@ const productHeaders = [
 
 const headers = [
   { title: '#', key: 'id', width: 40 },
-  { title: 'Fecha', key: 'report_date', sortable: true, width: 90 }, // Necesita ~85px para "YYYY-MM-DD"
-  { title: 'Consecut.', key: 'number', sortable: true, width: 70, align: 'end' },
-  { title: '#Factura', key: 'purchase_invoice', sortable: true, width: 70, align: 'end' },
+  { title: 'Fecha', key: 'report_date', sortable: true, width: 80 }, // Necesita ~85px para "YYYY-MM-DD"
+  { title: 'Consecut.', key: 'number', sortable: true, width: 60, align: 'end' },
+  { title: '#Factura', key: 'purchase_invoice', sortable: true, width: 60, align: 'end' },
 
   // Sin width para que absorban el espacio dinámico disponible
   { title: 'Descripción', key: 'concept_name', sortable: true },
@@ -1419,12 +1419,12 @@ const headers = [
 
   // Corregido 'aling' -> 'align'
   { title: 'SubTotal', key: 'subtotal', sortable: true, width: 65, align: 'end' },
-  { title: 'ValorIva', key: 'vatvalue', sortable: true, width: 60, align: 'end' },
-  { title: 'Desctos', key: 'descuentos', sortable: true, width: 60, align: 'end' },
-  { title: 'Retenc.', key: 'retenciones', sortable: true, width: 60, align: 'end' },
-  { title: 'Total', key: 'total_purchases', sortable: true, width: 70, align: 'end' },
+  { title: 'ValorIva', key: 'vatvalue', sortable: true, width: 50, align: 'end' },
+  { title: 'Desctos', key: 'descuentos', sortable: true, width: 50, align: 'end' },
+  { title: 'Retenc.', key: 'retenciones', sortable: true, width: 50, align: 'end' },
+  { title: 'Total', key: 'total_purchases', sortable: true, width: 65, align: 'end' },
 
-  { title: 'Estado', key: 'state', sortable: true, width: 50 },
+  { title: 'Estado', key: 'state', sortable: true, width: 40 },
   {
     title: 'Acciones',
     key: 'actions',
@@ -1658,40 +1658,42 @@ const headers = [
         </template>
 
         <template #item.actions="{ item }">
-          <IconBtn
-            density="compact"
-            class="ma-0"
-            @click="openEditDialog(item)"
-          >
-            <VIcon
-              icon="tabler-edit"
-              color="primary"
-            />
-          </IconBtn>
+          <div class="d-flex align-center flex-nowrap ga-1">
+            <IconBtn
+              density="compact"
+              class="ma-0"
+              @click="openEditDialog(item)"
+            >
+              <VIcon
+                icon="tabler-edit"
+                color="primary"
+              />
+            </IconBtn>
 
-          <IconBtn
-            density="compact"
-            class="ma-0"
-            :disabled="tipodeusuario === 'Operador'"
-            @click="confirmDelete(item.id)"
-          >
-            <VIcon
-              icon="tabler-trash"
-              :color="tipodeusuario === 'Operador' ? 'grey' : 'error'"
-            />
-          </IconBtn>
-          <IconBtn
-            density="compact"
-            class="ma-0"
-            @click="item.state !== 'Activo'
-              ? confirmPurchases(item.id, item.purchase_invoice, item)
-              : showDetailDocumentDialog(item)"
-          >
-            <VIcon
-              icon="tabler-list-check"
-              :color="item.state !== 'Activo' ? 'error' : 'success'"
-            />
-          </IconBtn>
+            <IconBtn
+              density="compact"
+              class="ma-0"
+              :disabled="tipodeusuario === 'Operador'"
+              @click="confirmDelete(item.id)"
+            >
+              <VIcon
+                icon="tabler-trash"
+                :color="tipodeusuario === 'Operador' ? 'grey' : 'error'"
+              />
+            </IconBtn>
+            <IconBtn
+              density="compact"
+              class="ma-0"
+              @click="item.state !== 'Activo'
+                ? confirmPurchases(item.id, item.purchase_invoice, item)
+                : showDetailDocumentDialog(item)"
+            >
+              <VIcon
+                icon="tabler-list-check"
+                :color="item.state !== 'Activo' ? 'error' : 'success'"
+              />
+            </IconBtn>
+          </div>
         </template>
 
         <template #bottom>

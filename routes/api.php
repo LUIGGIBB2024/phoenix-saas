@@ -143,6 +143,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/getsupplierpayments', [CxpPaymentController::class, 'getPayments']);
     Route::post('/supplierpayment', [CxpPaymentController::class, 'store']);
     Route::post('/supplierpayment-details', [CxpPaymentController::class, 'storedetails']);
+    Route::post('/list-balances-cxp', [CxpPaymentController::class, 'ListBalancesCxp']);
     Route::post('/getpayments-detail', [CxpPaymentController::class, 'getPaymentsDetail']);
     Route::post('/getpayments-detail-othr', [CxpPaymentController::class, 'getPaymentsDetailothr']);
 
