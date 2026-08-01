@@ -872,7 +872,6 @@ const valueField = useNumericField(editedItem, 'valor_factura')
                   density="comfortable"
                   rounded="lg"
                   return-object
-                  autofocus
                   required
                   class="custom-autocomplete mt-3 text_size bg-yellow-light"
                   :menu-props="{ contentClass: 'custom-autocomplete-menu' }"
@@ -1271,7 +1270,7 @@ $text-header: #fff;
   }
 
   .v-list-item {
-    background-color: #aaf5a7 !important; /* Cambia este color por el que gustes */
+    background-color: #e1fce1 !important; /* Cambia este color por el que gustes */
     color: #333 !important;           /* Color del texto */
 
     /* 2. Fondo al pasar el cursor por encima (Hover) */
