@@ -165,8 +165,7 @@ const ValidarCrearEgresos = computed(() => {
 onActivated(() => {
   proveedorSeleccionado.value = null
   documentoSeleccionado.value = null
-  origenSeleccionado.value = null
-  console.log('Soy Tipo de Egreso :', props.tipoDeEgreso)
+  origenSeleccionado.value = null  
 })
 
 // Cambia reactive por ref para el manejo del estado del formulario

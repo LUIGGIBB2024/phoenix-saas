@@ -205,3 +205,21 @@ export interface CheckOtherExpenses {
   suppliers_name: string
   companies_id: number
 }
+
+export interface FacturaCxP {
+  id: number
+  fecha_factura: string
+  fecha_vencimiento: string
+  dias_vencimiento: number
+  prefix: string
+  numero_factura: string
+  supplier: string
+  branch: string
+  proveedor: string
+  document_name: string
+  state: string
+  valor_factura: number
+  abonos: number
+  abonoactual: number
+  saldo: number
+}

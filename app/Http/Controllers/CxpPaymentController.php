@@ -10,6 +10,7 @@ use App\Models\DetailCxpPayment;
 use App\Models\GeneralDocument;
 use App\Models\MiscellaneousItem;
 use App\Models\PaymentConcept;
+use App\Models\PurchasesInvoice;
 use App\Models\SourcePayment;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
@@ -537,6 +538,156 @@ class CxpPaymentController extends Controller
             'message' => 'Consulta de Detalle del Documento Generada Exitosamente',
             'details' =>  $document,
 
+        ], 201, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function ConsultBalancesCxp(Request $request): JsonResponse
+    {
+        $fechadesde     = $request->input('fechadesde');
+        $fechahasta     = $request->input('fechahasta');
+        $suc            = $request->input('sucursal');
+        $companies_id   = $request->input('company_id');
+        $cptospagos     = PaymentConcept::where('type', 'Proveedores')->orderBy('code')->get();
+
+        $paymentsSubquery = DB::table('detail_cxp_payments')
+            ->select(
+                'companies_id',
+                'invoice',
+                'nit',
+                'prefix',
+                DB::raw("SUM(
+                CASE 
+                    WHEN calculate = 'Suma' THEN payment_amount 
+                    WHEN calculate = 'Resta' THEN -payment_amount 
+                    ELSE 0 
+                END
+            ) as abonos")
+            )
+            ->where('companies_id', $companies_id)
+            ->where('state', 'Activo')
+            ->groupBy('companies_id', 'invoice', 'nit', 'prefix');
+
+        // 2. CONSULTA PRINCIPAL: Une la subconsulta con la tabla de facturas
+        $listado = DB::table('purchases_invoices as pi')
+            ->leftJoinSub($paymentsSubquery, 'dp', function ($join) {
+                $join->on('pi.companies_id', '=', 'dp.companies_id')
+                    ->on('pi.number', '=', 'dp.invoice')
+                    ->on('pi.supplier', '=', 'dp.nit')
+                    ->where(function ($query) {
+                        $query->whereColumn('pi.prefix', '=', 'dp.prefix')
+                            ->orWhere(function ($q) {
+                                $q->whereNull('pi.prefix')->whereNull('dp.prefix');
+                            });
+                    });
+            })
+            ->select(
+                'pi.id',
+                'pi.date_issue as fecha_factura',
+                'pi.expiration_date as fecha_vencimiento',
+                DB::raw("DATEDIFF(CURRENT_DATE, pi.expiration_date) as dias_vencimiento"),
+                'pi.prefix',
+                'pi.number as numero_factura',
+                'pi.supplier',
+                'pi.branch',
+                'pi.supplier_name as proveedor',
+                'pi.document_name',
+                'pi.state',
+                DB::raw("COALESCE(pi.total_purchase, 0) as valor_factura"),
+
+                // Se obtiene directo del alias 'dp' sin SUM()
+                DB::raw("COALESCE(dp.abonos, 0) as abonos"),
+                DB::raw("COALESCE(0, 0) as abonoactual"),
+
+                // Saldo = Valor factura - Abonos calculados
+                DB::raw("(COALESCE(pi.total_purchase, 0) - COALESCE(dp.abonos, 0)) as saldo")
+            )
+            ->where('pi.companies_id', $companies_id)
+            ->where('pi.state', 'Activo')
+            ->whereBetween('pi.date_issue', [$fechadesde, $fechahasta])
+            // Opcional: Filtrar solo las que tengan saldo pendiente
+            // ->whereRaw('(COALESCE(pi.total_purchase, 0) - COALESCE(dp.abonos, 0)) > 0')
+            ->get();
+
+        $totales = [
+            'valor_factura' => $listado->sum(fn($item) => (float) $item->valor_factura),
+            'abonos'        => $listado->sum(fn($item) => (float) $item->abonos),
+            'saldo'         => $listado->sum(fn($item) => (float) $item->saldo),
+        ];
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Listado CXP Generado Exitosamente',
+            'listbalances' => $listado,
+            'totales'  => $totales,
+            'totaldocumentos' => $listado->count(),
+        ], 201);
+    }
+
+    public function GetSuppliersInvoice(Request $request): JsonResponse
+    {
+        $companies_id   = $request->input('company_id');
+
+        $proveedores = Supplier::where('companies_id', $companies_id)->get();
+        $dctos_cxp          = GeneralDocument::where('typedocument3', 'Causaciones')->where('companies_id', $companies_id)->get();
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Facturas del Proveedor obtenidas exitosamente.',
+            'suppliers' => $proveedores,
+            'dctoscxp' => $dctos_cxp,
+        ], 201, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function SaveInvoiceCxp(Request $request): JsonResponse
+    {
+
+        $companies_id   = $request->input('company_id');
+
+        $factura        = $request['facturas'];
+        $numerofactura  = $factura['number'];
+        $prefix         = $factura['prefix'];
+        $supplier       = $factura['nit'];
+        try {
+            PurchasesInvoice::updateOrCreate(
+                [
+                    'companies_id'  => $companies_id,
+                    'number'        => $numerofactura,
+                    'prefix'        => $prefix,
+                    'supplier'      => $supplier,
+                ],
+                [
+                    'date_issue'            => $factura['fecha_factura'],
+                    'expiration_date'       => $factura['fecha_vencimiento'],
+                    'document_name'         => $factura['document_name'],
+                    'branch'                => $factura['branch'],
+                    'supplier_name'         => $factura['supplier_name'],
+                    'total_purchase'        => $factura['valor_factura'],
+                    'subtotal'              => $factura['valor_factura'],
+                    'discounts' => 0,
+                    'vatvalue' => 0,
+                    'retefuente' => 0,
+                    'reteiva' => 0,
+                    'reteica' => 0,
+                    'cufe' => '',
+                    'state' => 'Activo',
+                ]
+            );
+        } catch (\Exception $ex) {
+            return response()->json(
+                [
+                    'status'   => '404 OK',
+                    'msg'      => 'Error en la actualización de la factura: ',
+                    'error'    => $ex->getMessage(),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Facturas CXP guardadas exitosamente.',
         ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 }
