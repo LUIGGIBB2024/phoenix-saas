@@ -4,7 +4,6 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { VIcon } from 'vuetify/components'
 import { VCard, VCardText } from 'vuetify/components/VCard'
 import { VCol } from 'vuetify/components/VGrid'
-import type { CxPPayment } from './components/CrearEgresosDialog.vue' // Ajusta la ruta de tu diálogo
 import ConsultarEgresosFacturasDialog from './vdialogs/ConsultarEgresosFacturasDialog.vue'
 import ConsultarEgresosOtrosPagosDialog from './vdialogs/ConsultarEgresosOtrosPagosDialog.vue'
 import CrearEgresosDialog from './vdialogs/CrearEgresosDialog.vue'
@@ -850,7 +849,7 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
 
   // showDetailsPayment.value = true
 
-  const urlbase = (paymenttype === 'PagosFacturas') ? '/api/getpayments-detail' : '/api/getpayments-detail-othr'
+  const urlbase = (paymenttype === 'PagosFacturas') ? '/api/getpayments-detail-cxp' : '/api/getpayments-detail-othr-cxp'
   try {
     // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
     const { data } = await axios.post(urlbase, {
@@ -1079,16 +1078,18 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
         </template>
 
         <template #item.actions="{ item }">
-          <IconBtn
+          <!--
+            <IconBtn
             density="compact"
             class="ma-0"
             @click="openEditDialog(item)"
-          >
+            >
             <VIcon
-              icon="tabler-edit"
-              color="primary"
+            icon="tabler-edit"
+            color="primary"
             />
-          </IconBtn>
+            </IconBtn>
+          -->
 
           <IconBtn
             density="compact"
@@ -1665,7 +1666,7 @@ textarea {
 }
 
 .text-column {
-   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif, sans-serif;
+   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
    font-size: 0.85em;
    line-height: 1 !important;
    margin-block-start: 1 !important;

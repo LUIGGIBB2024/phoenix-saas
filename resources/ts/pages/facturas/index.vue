@@ -2,6 +2,8 @@
 import axios from 'axios'
 import { computed, reactive, ref, watch } from 'vue'
 
+// Importa la traducción al español
+
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
 const snackbarVisible = ref(false)
@@ -313,6 +315,10 @@ const stockDisponibleParaEdicion = computed<number>(() => {
   const producto = productos.find(p => p.id === itemEnEdicion.value!.productoId)
 
   return producto ? producto.stock + itemEnEdicion.value.cantidad : 0
+})
+
+const ValidarCrearFacturas = computed(() => {
+  return !total.value
 })
 
 // ===================== Watchers =====================
@@ -1293,7 +1299,7 @@ if (producto)
                     size="small"
                     rounded="lg"
                     height="30"
-                    :loading="guardando"
+                    :disabled="ValidarCrearFacturas"
                     @click="guardarFactura"
                   >
                     <template #loader>
@@ -1304,7 +1310,7 @@ if (producto)
                     <VIcon start>
                       tabler-brand-databricks
                     </VIcon>
-                    {{ guardando ? 'Guardando...' : 'Guardar factura' }}
+                    {{ guardando ? 'Guardar factura' : 'Guardar factura' }}
                   </VBtn>
                 </VCardActions>
               </vcard>

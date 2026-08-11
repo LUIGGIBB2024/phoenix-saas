@@ -443,7 +443,7 @@ class CxpPaymentController extends Controller
         ], 201);
     }
 
-    public function getPaymentsDetail(Request $request): JsonResponse
+    public function getPaymentsDetailCxp(Request $request): JsonResponse
     {
         $companyId  = $request->input('company_id');
         $iddocument = $request['document']['id'];
@@ -489,7 +489,7 @@ class CxpPaymentController extends Controller
         ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function getPaymentsDetailothr(Request $request): JsonResponse
+    public function getPaymentsDetailothrCxp(Request $request): JsonResponse
     {
         $companyId  = $request->input('company_id');
         $iddocument = $request['document']['id'];
@@ -543,18 +543,16 @@ class CxpPaymentController extends Controller
 
     public function ConsultBalancesCxp(Request $request): JsonResponse
     {
-        $fechadesde     = $request->input('fechadesde');
-        $fechahasta     = $request->input('fechahasta');
-        $suc            = $request->input('sucursal');
-        $companies_id   = $request->input('company_id');
-        $cptospagos     = PaymentConcept::where('type', 'Proveedores')->orderBy('code')->get();
+        $fechadesde   = $request->input('fechadesde');
+        $fechahasta   = $request->input('fechahasta');
+        $suc          = $request->input('sucursal');
+        $companies_id = $request->input('company_id');
 
+        // 1. SUBCONSULTA DE ABONOS: Consolidada estrictamente por purchases_invoice_id
         $paymentsSubquery = DB::table('detail_cxp_payments')
             ->select(
+                'purchases_invoice_id',
                 'companies_id',
-                'invoice',
-                'nit',
-                'prefix',
                 DB::raw("SUM(
                 CASE 
                     WHEN calculate = 'Suma' THEN payment_amount 
@@ -565,20 +563,14 @@ class CxpPaymentController extends Controller
             )
             ->where('companies_id', $companies_id)
             ->where('state', 'Activo')
-            ->groupBy('companies_id', 'invoice', 'nit', 'prefix');
+            ->whereNotNull('purchases_invoice_id')
+            ->groupBy('purchases_invoice_id', 'companies_id');
 
-        // 2. CONSULTA PRINCIPAL: Une la subconsulta con la tabla de facturas
+        // 2. CONSULTA PRINCIPAL: Unir facturas de compra con abonos consolidados
         $listado = DB::table('purchases_invoices as pi')
             ->leftJoinSub($paymentsSubquery, 'dp', function ($join) {
-                $join->on('pi.companies_id', '=', 'dp.companies_id')
-                    ->on('pi.number', '=', 'dp.invoice')
-                    ->on('pi.supplier', '=', 'dp.nit')
-                    ->where(function ($query) {
-                        $query->whereColumn('pi.prefix', '=', 'dp.prefix')
-                            ->orWhere(function ($q) {
-                                $q->whereNull('pi.prefix')->whereNull('dp.prefix');
-                            });
-                    });
+                $join->on('pi.id', '=', 'dp.purchases_invoice_id')
+                    ->on('pi.companies_id', '=', 'dp.companies_id');
             })
             ->select(
                 'pi.id',
@@ -593,35 +585,34 @@ class CxpPaymentController extends Controller
                 'pi.document_name',
                 'pi.state',
                 DB::raw("COALESCE(pi.total_purchase, 0) as valor_factura"),
-
-                // Se obtiene directo del alias 'dp' sin SUM()
                 DB::raw("COALESCE(dp.abonos, 0) as abonos"),
-                DB::raw("COALESCE(0, 0) as abonoactual"),
-
-                // Saldo = Valor factura - Abonos calculados
+                DB::raw("0 as abonoactual"),
                 DB::raw("(COALESCE(pi.total_purchase, 0) - COALESCE(dp.abonos, 0)) as saldo")
             )
             ->where('pi.companies_id', $companies_id)
             ->where('pi.state', 'Activo')
-            ->whereBetween('pi.date_issue', [$fechadesde, $fechahasta])
-            // Opcional: Filtrar solo las que tengan saldo pendiente
-            // ->whereRaw('(COALESCE(pi.total_purchase, 0) - COALESCE(dp.abonos, 0)) > 0')
+            ->when($fechadesde && $fechahasta, function ($query) use ($fechadesde, $fechahasta) {
+                $query->whereBetween('pi.date_issue', [$fechadesde, $fechahasta]);
+            })
+            ->when($suc, function ($query) use ($suc) {
+                $query->where('pi.branch', $suc);
+            })
             ->get();
 
+        // 3. CÁLCULO DE TOTALES
         $totales = [
-            'valor_factura' => $listado->sum(fn($item) => (float) $item->valor_factura),
-            'abonos'        => $listado->sum(fn($item) => (float) $item->abonos),
-            'saldo'         => $listado->sum(fn($item) => (float) $item->saldo),
+            'valor_factura' => (float) $listado->sum('valor_factura'),
+            'abonos'        => (float) $listado->sum('abonos'),
+            'saldo'         => (float) $listado->sum('saldo'),
         ];
 
-
         return response()->json([
-            'success' => true,
-            'message' => 'Listado CXP Generado Exitosamente',
-            'listbalances' => $listado,
-            'totales'  => $totales,
+            'success'         => true,
+            'message'         => 'Listado CXP Generado Exitosamente',
+            'listbalances'    => $listado,
+            'totales'         => $totales,
             'totaldocumentos' => $listado->count(),
-        ], 201);
+        ], 200);
     }
 
     public function GetSuppliersInvoice(Request $request): JsonResponse
@@ -688,6 +679,32 @@ class CxpPaymentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Facturas CXP guardadas exitosamente.',
+        ], 201, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function DeleteInvoiceCxp(Request $request, $id): JsonResponse
+    {
+        $companies_id   = (int) $request->input('company_id');
+        $factura_id     = (int) $id;
+
+        try {
+            PurchasesInvoice::where('companies_id', $companies_id)
+                ->where('id', $factura_id)
+                ->delete();
+        } catch (\Exception $ex) {
+            return response()->json(
+                [
+                    'status'   => '404 OK',
+                    'msg'      => 'Error al eliminar la factura: ',
+                    'error'    => $ex->getMessage(),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Factura CXP eliminada exitosamente.',
         ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 }

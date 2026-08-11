@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -38,8 +39,8 @@ return new class extends Migration
             $table->index(['companies_id', 'report_date', 'consecutive', 'document', 'invoice', 'prefix', 'concept'], 'idx_companies_consecutive');
             $table->index(['companies_id', 'report_date', 'nit'], 'idx_companies_report');
 
-            $table->unsignedBigInteger('suppliers_id')->index()->nullable();
-            $table->foreign('suppliers_id')->references('id')->on('suppliers')->onDelete('set null');
+            $table->unsignedBigInteger('customers_id')->index()->nullable();
+            $table->foreign('customers_id')->references('id')->on('customers')->onDelete('set null');
             $table->unsignedBigInteger('companies_id')->index()->nullable();
             $table->foreign('companies_id')->references('id')->on('companies')->onDelete('set null');
 

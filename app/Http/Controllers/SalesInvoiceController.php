@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\ControlConsecutive;
 use App\Models\Customer;
 use App\Models\GeneralDocument;
 use App\Models\InventoryBalance;
@@ -207,6 +208,7 @@ class SalesInvoiceController extends Controller
 
     public function store(Request $request)
     {
+        //dd($request->all());
         $companies_id   = $request->input('company_id');
         $customers      = $request->factura['cliente'] ?? null;
         $items          = $request->factura['items'] ?? null;
@@ -229,10 +231,16 @@ class SalesInvoiceController extends Controller
         $numerofactura = 0;
         $nit = $request->factura['cliente']['nit'] ?? null;
         $price_list_id = $request->factura['cliente']['price_list_id'] ?? null;
-        $list_code = PriceList::where('id', $price_list_id)->value('code') ?? null;
 
-        $documento = GeneralDocument::all()
-            ->where('companies_id', $companies_id)
+        $lista = PriceList::where('id', $price_list_id)->where('companies_id', $companies_id)->first();
+        $list_code = $lista->code ?? null;
+
+
+        $numconsecutive = ControlConsecutive::getNextConsecutive('FACTURAS', $companies_id, "");
+
+        $numerofactura = $numconsecutive;
+
+        $documento = GeneralDocument::where('companies_id', $companies_id)
             ->where('type', 'Clientes')
             ->where('typedocument1', 'Facturas')
             ->where('typedocument4', $tipodcto)
@@ -242,10 +250,10 @@ class SalesInvoiceController extends Controller
         if ($documento) {
 
             // Incrementamos el campo 'consecutive' en 1 en la base de datos y en el objeto actual
-            $documento->increment('consecutive');
+            //$documento->increment('consecutive');
 
             // Asignamos el valor actualizado a tu variable
-            $numerofactura = $documento->consecutive;
+            //$numerofactura = $documento->consecutive;
         } else {
             // Manejo de error en caso de que no se encuentre el documento configurado
             throw new \Exception("No se encontró una configuración de documento activo para los parámetros internos.");

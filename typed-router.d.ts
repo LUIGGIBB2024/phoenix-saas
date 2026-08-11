@@ -443,6 +443,48 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'recibosdecaja-consultarcxc': RouteRecordInfo<
+      'recibosdecaja-consultarcxc',
+      '/recibosdecaja/consultarcxc',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'recibosdecaja-vdialogs-consultar-rec-caja-dialog': RouteRecordInfo<
+      'recibosdecaja-vdialogs-consultar-rec-caja-dialog',
+      '/recibosdecaja/vdialogs/ConsultarRecCajaDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'recibosdecaja-vdialogs-consultar-rec-caja-other-dialog': RouteRecordInfo<
+      'recibosdecaja-vdialogs-consultar-rec-caja-other-dialog',
+      '/recibosdecaja/vdialogs/ConsultarRecCajaOtherDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'recibosdecaja-vdialogs-crear-rec-caja-dialog': RouteRecordInfo<
+      'recibosdecaja-vdialogs-crear-rec-caja-dialog',
+      '/recibosdecaja/vdialogs/CrearRecCajaDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'recibosdecaja-vdialogs-reportar-otros-pagos-dialog': RouteRecordInfo<
+      'recibosdecaja-vdialogs-reportar-otros-pagos-dialog',
+      '/recibosdecaja/vdialogs/ReportarOtrosPagosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'recibosdecaja-vdialogs-reportar-pagos-dialog': RouteRecordInfo<
+      'recibosdecaja-vdialogs-reportar-pagos-dialog',
+      '/recibosdecaja/vdialogs/ReportarPagosDialog',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'register': RouteRecordInfo<
       'register',
       '/register',
@@ -848,6 +890,42 @@ declare module 'vue-router/auto-routes' {
     'resources/ts/pages/recibosdecaja/index.vue': {
       routes:
         | 'recibosdecaja'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/consultarcxc.vue': {
+      routes:
+        | 'recibosdecaja-consultarcxc'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/vdialogs/ConsultarRecCajaDialog.vue': {
+      routes:
+        | 'recibosdecaja-vdialogs-consultar-rec-caja-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/vdialogs/ConsultarRecCajaOtherDialog.vue': {
+      routes:
+        | 'recibosdecaja-vdialogs-consultar-rec-caja-other-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/vdialogs/CrearRecCajaDialog.vue': {
+      routes:
+        | 'recibosdecaja-vdialogs-crear-rec-caja-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/vdialogs/ReportarOtrosPagosDialog.vue': {
+      routes:
+        | 'recibosdecaja-vdialogs-reportar-otros-pagos-dialog'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/vdialogs/ReportarPagosDialog.vue': {
+      routes:
+        | 'recibosdecaja-vdialogs-reportar-pagos-dialog'
       views:
         | never
     }

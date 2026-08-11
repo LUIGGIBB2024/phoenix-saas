@@ -4,9 +4,12 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { VIcon } from 'vuetify/components'
 import { VCard, VCardText } from 'vuetify/components/VCard'
 import { VCol } from 'vuetify/components/VGrid'
-import type { CxPPayment } from './components/CrearEgresosDialog.vue' // Ajusta la ruta de tu diálogo
+import ConsultarRecCajaDialog from './vdialogs/ConsultarRecCajaDialog.vue'
+import type ConsultarRecCajaOtherDialog from './vdialogs/ConsultarRecCajaOtherDialog.vue'
+import CrearRecCajaDialog from './vdialogs/CrearRecCajaDialog.vue'
+
 // import ConsultarEgresosFacturasDialog from './vdialogs/ConsultarEgresosFacturasDialog.vue'
-// import ConsultarEgresosOtrosPagosDialog from './vdialogs/ConsultarEgresosOtrosPagosDialog.vue'
+// import ConsultarEgresosOtrosPagosDialog from vdialogs/'./vdialogs/ConsultarEgresosOtrosPagosDialog.vue'
 // import CrearEgresosDialog from './vdialogs/CrearEgresosDialog.vue'
 
 const emit = defineEmits(['save', 'close'])
@@ -19,11 +22,11 @@ const NombreDelCliente = ref('')
 const DocumentoSeleccionado = ref('')
 
 // 1. Declaramos la variable reactiva
-const tipoDeEgreso = ref<string>('')
+const tipoDeRecibo = ref<string>('')
 
-const crearRecibosoDialog = ref<InstanceType<typeof CrearEgresosDialog> | null>(null)
-const consultarRecibosDialog = ref<InstanceType<typeof ConsultarEgresosFacturasDialog> | null>(null)
-const consultarRecibosOtrosDialog = ref<InstanceType<typeof ConsultarEgresosOtrosPagosDialog> | null>(null)
+const crearRecCajaDialog = ref<InstanceType<typeof CrearRecCajaDialog> | null>(null)
+const consultarRecibosDialog = ref<InstanceType<typeof ConsultarRecCajaDialog> | null>(null)
+const consultarRecibosOtrosDialog = ref<InstanceType<typeof ConsultarRecCajaOtherDialog> | null>(null)
 
 // import type { Product } from './type'
 
@@ -32,6 +35,7 @@ const archivos = ref<File[]>([])
 const isFocused = ref(false)
 const isDialogActive = ref(false)
 const infofactura = ref('')
+const dialog = ref(false)
 
 isDialogActive.value = false
 
@@ -47,6 +51,15 @@ const autocompleteProductoKey = ref<number>(0)
 
 const tipodeusuario = ref(localStorage.getItem('tipo_de_usuario'))
 const process_year = ref(localStorage.getItem('process_year'))
+
+const openreccaja = (item: CxCPayment | null = null) => {
+  if (item)
+    Object.assign(editedItem, item)
+  else
+    Object.assign(editedItem, defaultItem)
+
+  dialog.value = true
+}
 
 function onFileChange(e: Event) {
   const target = e.target as HTMLInputElement
@@ -76,7 +89,6 @@ const costoFormateado = computed(() => {
   return formatCurrency(costoActual.value, 2)
 })
 
-const dialog = ref(false)
 const valid = ref(true)
 const form = ref<HTMLFormElement | null>(null)
 
@@ -122,15 +134,6 @@ const valueRules = [
   (v: number) => (v !== null && v >= 0) || 'El valor debe ser un número positivo',
 ]
 
-const open = (item: CxPPayment | null = null) => {
-  if (item)
-    Object.assign(editedItem, item)
-  else
-    Object.assign(editedItem, defaultItem)
-
-  dialog.value = true
-}
-
 const close = () => {
   dialog.value = false
   form.value?.resetValidation()
@@ -147,7 +150,7 @@ const save = async () => {
 
 // Exponer la función open para que el componente padre pueda llamarla
 defineExpose({
-  open,
+  openreccaja,
 })
 
 // --- 🔹 Modal y formulario de creación ---
@@ -432,7 +435,8 @@ const openEditDialog = _infoData => {
 }
 
 // 🔹 Abrir modal en modo creación
-const openCreateDialog = (tipo: string) => {
+const openCreateDialog = async (tipo: string) => {
+  console.log('🆕 Abriendo modal para nuevo RecCaja : 0')
   editMode.value = false
   newRecord.value = {
     id: null,
@@ -467,14 +471,31 @@ const openCreateDialog = (tipo: string) => {
     userupdate: 'System',
   }
 
-  // console.log('🆕 Abriendo modal para nuevo clientes :', newRecord.value.type_document_identification_id, ' TypeIdent:', typedocument.value)
+  console.log('🆕 Abriendo modal para nuevo RecCaja : 00')
   showDialog.value = true
 
-  tipoDeEgreso.value = tipo
+  tipoDeRecibo.value = tipo
 
-  // 4. CONEXIÓN: Llamas al método expuesto por el hijo pasándole los datos
-  if (crearEgresoDialog.value)
-    crearEgresoDialog.value.open({ ...newRecord.value })
+  // Esperamos a que el componente se monte en el DOM
+  await nextTick()
+
+  // Ahora la referencia ya debería estar disponible
+  console.log('🆕 Abriendo modal para nuevo RecCaja : 000')
+
+  console.log('--- VERIFICACIÓN FINAL ---')
+  console.log('¿El componente está importado?:', !crearRecCajaDialog.value)
+  console.log('Tipo de la ref:', typeof crearRecCajaDialog.value)
+  console.log('¿Es una instancia de Vue?:', !!crearRecCajaDialog.value?.$)
+  if (crearRecCajaDialog.value) {
+    console.log('4. ¡Éxito! Entrando al open del hijo')
+    crearRecCajaDialog.value.openreccaja({ ...newRecord.value })
+  }
+  else {
+    console.error('4. ERROR: La ref sigue siendo NULL después de nextTick')
+  }
+
+  // crearRcCajaDialog.value.open({ ...newRecord.value })
+  console.log('🆕 Abriendo modal para nuevo RecCaja : 0000')
 }
 
 const openCreateDialogOther = (tipo: string) => {
@@ -512,14 +533,18 @@ const openCreateDialogOther = (tipo: string) => {
     userupdate: 'System',
   }
 
+  console.log('🆕 Abriendo modal para nuevo RecCaja : (00)')
+
   // console.log('🆕 Abriendo modal para nuevo clientes :', newRecord.value.type_document_identification_id, ' TypeIdent:', typedocument.value)
   showDialog.value = true
 
-  tipoDeEgreso.value = tipo
+  tipoDeRecibo.value = tipo
 
   // 4. CONEXIÓN: Llamas al método expuesto por el hijo pasándole los datos
-  if (crearEgresoDialog.value)
-    crearEgresoDialog.value.open({ ...newRecord.value })
+  console.log('🆕 Abriendo modal para nuevo RecCaja : 00')
+  if (crearRecCajaDialog.value)
+    crearRecCajaDialog.value.openreccaja({ ...newRecord.value })
+  console.log('🆕 Abriendo modal para nuevo RecCaja : 01')
 }
 
 const confirmSaveCharges = (id: number, Purchase_Invoice: string) => {
@@ -811,7 +836,8 @@ const headers = [
 
   // A estas dos NO les pongas width para que absorban el espacio flexible y puedan hacer salto de línea
   { title: 'Descripción', key: 'document_name', sortable: true },
-  { title: 'Origen de Pago', key: 'origin_name', sortable: true },
+
+  // { title: 'Origen de Pago', key: 'origin_name', sortable: true },
   {
     title: 'Nit/Cédula',
     key: 'nit',
@@ -824,12 +850,12 @@ const headers = [
   { title: 'Tipo de Recibo', key: 'payment_type', sortable: true },
 
   // Columnas numéricas con un ancho fijo prudente
-  { title: 'Valor Recibo', key: 'value_cxp', sortable: true, width: 80, aling: 'end' },
+  { title: 'Valor Recibo', key: 'value_cxc', sortable: true, width: 80, aling: 'end' },
   { title: 'Estado', key: 'state', sortable: true, width: 90 },
   { title: 'Acciones', key: 'actions', sortable: false, width: 120, aling: 'center' }, // Espacio optimizado para tus 3 IconBtn compactos
 ]
 
-function onEgresoGuardado({ esEdicion, registro }: { esEdicion: boolean; registro: any }) {
+function onReciboGuardado({ esEdicion, registro }: { esEdicion: boolean; registro: any }) {
   if (esEdicion) {
     // MODO EDICIÓN
     responseData.value.payments = responseData.value.payments.map((item: any) =>
@@ -850,7 +876,7 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
 
   // showDetailsPayment.value = true
 
-  const urlbase = (paymenttype === 'PagosFacturas') ? '/api/getpayments-detail' : '/api/getpayments-detail-othr'
+  const urlbase = (paymenttype === 'PagosFacturas') ? '/api/getpayments-detail-cxc' : '/api/getpayments-detail-othr-cxc'
   try {
     // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
     const { data } = await axios.post(urlbase, {
@@ -876,13 +902,13 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
     if (paymenttype === 'PagosFacturas') {
       showDetailsPayment.value = true
       showDetailsOtherPayment.value = false
-      consultarEgresosDialog.value?.open()
+      consultarRecibosDialog.value?.openreccaja()
     }
     else {
       detailsothr.value = data.details
       showDetailsPayment.value = false
       showDetailsOtherPayment.value = true
-      consultarEgresosOtrosDialog.value?.open()
+      consultarRecibosOtrosDialog.value?.open()
     }
   }
   catch (error) {
@@ -1050,7 +1076,7 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
 
         <template #item.supplier_name="{ item }">
           <div class="cell-wrap text-column">
-            {{ item.supplier_name }}
+            {{ item.customer_name }}
           </div>
         </template>
 
@@ -1066,9 +1092,9 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
           </div>
         </template>
 
-        <template #item.value_cxp="{ item }">
+        <template #item.value_cxc="{ item }">
           <div class="cell-wrap text-column text-right">
-            {{ formatCurrency(item.value_cxp, 0) }}
+            {{ formatCurrency(item.value_cxc, 0) }}
           </div>
         </template>
 
@@ -1079,16 +1105,18 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
         </template>
 
         <template #item.actions="{ item }">
-          <IconBtn
+          <!--
+            <IconBtn
             density="compact"
             class="ma-0"
             @click="openEditDialog(item)"
-          >
+            >
             <VIcon
-              icon="tabler-edit"
-              color="primary"
+            icon="tabler-edit"
+            color="primary"
             />
-          </IconBtn>
+            </IconBtn>
+          -->
 
           <IconBtn
             density="compact"
@@ -1166,27 +1194,27 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
     </VSnackbar>
   </section>
 
-  <CrearEgresosDialog
-    ref="crearEgresoDialog"
+  <CrearRecCajaDialog
+    ref="crearRecCajaDialog"
     :customers="customers"
-    :tipo-de-egreso="tipoDeEgreso"
+    :tipo-de-recibo="tipoDeRecibo"
     :sources="sources"
     :otherexpenses="otherexpenses"
     :docspayments="docspayments"
     :docspaymentsothers="docspaymentsothers"
-    @save="handleSaveEgreso"
-    @egreso-guardado="onEgresoGuardado"
+    @save="handleSaveRecibo"
+    @recibo-guardado="onReciboGuardado"
   />
 
-  <ConsultarEgresosFacturasDialog
-    ref="consultarEgresosDialog"
+  <ConsultarRecCajaDialog
+    ref="consultarRecCajaDialog"
     v-model:dialogdetpayment="showDetailsPayment"
     :details="details"
     :titledetails="NombreDelCliente"
   />
 
-  <ConsultarEgresosOtrosPagosDialog
-    ref="consultarEgresosOtrosDialog"
+  <ConsultarRecCajaOtrosDialog
+    ref="consultarRecCajaOtrosDialog"
     v-model:dialogotherpayment="showDetailsOtherPayment"
     :detailsothr="detailsothr"
     :titledetails="NombreDelCliente"
@@ -1272,15 +1300,6 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
 </template>
 
 <style lang="scss">
-#company-list {
-  .company-list-filter {
-    inline-size: 12rem;
-  }
-}
-
-/* Paginación circular */
-
-/* 1. Estilos para el componente VPagination (el que tienes en el slot #bottom) */
 .pagination-wrapper {
   .v-pagination__first,
   .v-pagination__item,
@@ -1288,10 +1307,7 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
   .v-pagination__prev,
   .v-pagination__last {
     .v-btn {
-      background-color: rgb(247, 58, 206) !important;
-
-      /* Cambia el color de los iconos de flecha y números */
-      // color: #0EE920 !important;
+      background-color: rgb(253, 134, 227) !important;
 
       .v-icon {
         color: rgb(250, 253, 245) !important;
@@ -1300,400 +1316,100 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
   }
 }
 
-.modal-title {
-  margin: 0;
-  background-color: rgb(var(--v-theme-primary)); /* color primario del tema */
-  border-start-end-radius: 6px;
-  border-start-start-radius: 6px;
-  color: white; /* texto blanco */
-  font-size: 1.25rem;
-  font-weight: 600;
-  padding-block: 16px;
-  padding-inline: 24px;
-}
-
-.columna_name {
-  display: block;
-  font-size: 0.85em;
-  line-height: 1.3;         /* mejora legibilidad */
-  overflow-wrap: break-word;
-
-  // max-width: 600px;         /* ancho fijo */
-  white-space: normal; /* permite salto de línea */
-  word-wrap: break-word;    /* divide palabras largas */
-}
-
-.columna_name2 {
-  display: block;
-  font-size: 0.78em;
-  line-height: 1.3;         /* mejora legibilidad */
-  overflow-wrap: break-word;
-
-  // max-width: 600px;         /* ancho fijo */
-  white-space: normal; /* permite salto de línea */
-  word-wrap: break-word;    /* divide palabras largas */
-}
-
-/* Evita que el resto de columnas se vean afectadas */
-// .company-table :deep(td),
-// .company-table :deep(th) {
-//   white-space: nowrap;
-// }
-
-/* 🌟 Bordes verticales para VDataTableServer */
-thead th {
-  background-color: rgb(247, 58, 206) !important;
-  color: white !important;
-}
-
-.v-data-table__thead th {
-  color: white !important;
-}
-
-/* Apunta directamente al elemento input nativo dentro de tu componente */
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.text_size :deep(input) {
-  font-size: 14px !important;
-}
-
-.--v-field-padding-start {
-  font-size: 6px !important;
-}
-
-/* Opcional: Si también quieres cambiar el tamaño de la etiqueta (Label) */
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.text_size :deep(.v-label) {
-  font-size: 10px !important;
-}
-
-/* Quita el borde derecho en la última columna */
-.grid-table :deep(.v-data-table__td:last-child),
-.grid-table :deep(.v-data-table__th:last-child) {
-  border-inline-end: none;
-}
-
-/* Opcional: bordes suaves inferiores */
-.grid-table :deep(.v-data-table__td) {
-  border-block-end: 1px solid rgba(0, 0, 0, 8%) !important;
-}
-
-.grid-table :deep(.v-data-table__wrapper) {
-  overflow: visible !important;
-}
-
-.grid-table :deep(.v-data-table__td),
-.grid-table :deep(.v-data-table__th) {
-  border-inline-end: 1px solid rgba(var(--v-theme-on-surface), 0.15) !important;
-}
-
-/* Botón mejor alineado */
-.toolbar-header .v-btn {
-  block-size: 40px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 8%);
-  font-weight: 500;
-}
-
-.v-overlay {
-  position: fixed !important;
-  z-index: 9999 !important;
-}
-
-.textarea {
-  font-size: 12px !important;
-  line-height: 1.4;
-}
-
-textarea {
-  block-size: 80px !important;
-  font-size: 0.85em !important;
-}
-
-.v-field__input {
-  font-size: 0.84em !important;
-}
-
-.columna_size {
-  display: block;
-  font-size: 0.9em;
-  line-height: 1.3;         /* mejora legibilidad */
-  overflow-wrap: break-word;
-  white-space: normal !important; /* permite salto de línea */
-  word-wrap: break-word;    /* divide palabras largas */
-}
-
-.column_date_size {
-  font-size: 0.9em;
-  line-height: 1.3;         /* mejora legibilidad */
-
-  // min-height: 56px!important;
-  margin-block-start: 0 !important;
-  padding-block-start: 0 !important;
-
-  // width: 20em !important;
-  white-space: normal !important; /* permite salto de línea */
-}
-
-.text-center-input input {
-  cursor: pointer;
-  text-align: center !important;
-}
-
-/* Forzar que el calendario de Flatpickr esté sobre el VDialog */
-.flatpickr-calendar {
-  z-index: 10000 !important;
-}
-
-.v-data-table thead th {
-  text-transform: capitalize !important;
-}
-
-.v-data-table thead th .v-table {
-  color: white !important;
-}
-
-.v-data-table-header__content {
-  color: white !important;
-}
-
-.row-uniform-margin > .v-col > * {
-  margin-block-start: 12px !important; /* o el valor que quieras */
-}
-
-//   .v-col {
-//   display: flex;
-//   align-items: center;
-// }
-
-/* Corrige el colapso del VSelect y lo nivela con el AppTextField */
-:deep(.custom-select-height .v-field) {
-  align-items: center !important;
-  block-size: 44px !important; /* Ajusta a 40px o 42px si notas que queda un poco más alto que el NIT */
-}
-
-:deep(.custom-select-height .v-field__input) {
-  min-block-size: 100% !important;
-  padding-block: 0 !important;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-:deep(.v-file-upload) {
-  min-block-size: 120px !important;
-  padding-block: 8px !important;
-  padding-inline: 16px !important;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-:deep(.v-file-upload-divider) {
-  margin-block: 4px !important;
-  margin-inline: 0 !important;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.custom-select-height :deep(.v-field) {
-  min-block-size: 32px !important;
-}
-
- /* stylelint-disable-next-line @stylistic/indentation */
- /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
- :deep(.v-label) {
-   /* stylelint-disable-next-line @stylistic/indentation */
-   font-size: 0.4 rem !important;
-}
-
-  /* Forzar la misma altura para todos los campos */
-  :deep(.custom-field .v-field),
-  :deep(.custom-select .v-field) {
-    max-block-size: 48px !important;
-    min-block-size: 48px !important;
-  }
-
-  /* Alinear el input y el label */
-  :deep(.custom-field .v-field__input),
-  :deep(.custom-select .v-field__input) {
-    min-block-size: 48px !important;
-    padding-block: 4px !important;
-  }
-
-  /* Ajustar el label flotante */
-  :deep(.custom-select .v-label) {
-    inset-block-start: 12px !important;
-    transform-origin: left center !important;
-  }
-
-  /* Cuando el label está flotando (arriba) */
-  :deep(.custom-select .v-field--focused .v-label),
-  :deep(.custom-select .v-field--dirty .v-label) {
-    inset-block-start: 4px !important;
-    transform: scale(0.75) !important;
-  }
-
-  /* Ajustar el placeholder */
-  :deep(.custom-select .v-field .v-field__input input::placeholder) {
-    opacity: 0;
-  }
-
-  /* Para mantener consistencia con AppTextField */
-  :deep(.custom-field .v-label),
-  :deep(.custom-select .v-label) {
-    font-size: 14px !important;
-  }
-
- /* stylelint-disable-next-line @stylistic/indentation */
- .contenedor-alineado {
-  display: flex; /* Activa la caja flexible */
-  flex-direction: row; /* Coloca los componentes uno al lado del otro */
-  align-items: flex-end; /* Alinea todos los componentes exactamente en la misma línea superior */
-  gap: 20px; /* Espacio opcional entre los componentes */
-}
-
-.contenedor-alineado1 {
-  display: inline-flex;
-  align-items: flex-start; /* Garantiza el mismo nivel top para todos */
-  justify-content: center; /* Centra los componentes horizontalmente */
-  gap: 50px; /* Separación horizontal */
-}
-
-/* ========== SOLUCIÓN DEFINITIVA ========== */
-
-/* 1. Forzar la misma altura para todos los campos */
-.aligned-field :deep(.v-field),
-.aligned-select :deep(.v-field) {
-  block-size: 48px !important;
-  max-block-size: 48px !important;
-  min-block-size: 48px !important;
-}
-
-/* 2. Alinear el padding interno */
-.aligned-field :deep(.v-field__input),
-.aligned-select :deep(.v-field__input) {
-  display: flex !important;
-  align-items: center !important;
-  min-block-size: 48px !important;
-  padding-block: 4px !important;
-}
-
-/* 3. Ajustar el label para que esté alineado con los demás */
-.aligned-field :deep(.v-label),
-.aligned-select :deep(.v-label) {
-  font-size: 14px !important;
-  inset-block-start: 12px !important;
-  transform-origin: left center !important;
-}
-
-/* 4. Cuando el label está flotando (arriba) */
-.aligned-field :deep(.v-field--focused .v-label),
-.aligned-field :deep(.v-field--dirty .v-label),
-.aligned-select :deep(.v-field--focused .v-label),
-.aligned-select :deep(.v-field--dirty .v-label) {
-  inset-block-start: 4px !important;
-  transform: scale(0.75) !important;
-}
-
-/* 5. Ajustar el placeholder (ocultarlo para que no se solape) */
-.aligned-field :deep(.v-field .v-field__input input::placeholder),
-.aligned-select :deep(.v-field .v-field__input input::placeholder) {
-  opacity: 0 !important;
-}
-
-/* 6. Ajustar el prepend-inner para que esté alineado verticalmente */
-.aligned-field :deep(.v-field__prepend-inner),
-.aligned-select :deep(.v-field__prepend-inner) {
-  align-self: flex-start !important;
-  padding-block-start: 12px !important;
-}
-
-/* 7. Envoltorio para el VSelect (control extra) */
-.select-wrapper {
-  display: flex;
-  align-items: flex-start;
-  block-size: 48px;
-  padding-block-start: 0;
-}
-
-/* 8. Opcional: eliminar el margen inferior del VSelect para que coincida */
-.aligned-select {
-  margin-block-end: 0 !important;
-}
-
-/* Ajuste fino para que todos los campos tengan el mismo aspecto */
-.aligned-field,
-.aligned-select {
-  inline-size: 100%;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.select-compact :deep(.v-field__input) {
-  min-inline-size: 0 !important;
-  padding-inline: 6px 0 !important;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.select-compact :deep(.v-field__field) {
-  padding-inline: 0 !important;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.select-compact :deep(.v-select__selection) {
-  overflow: visible !important;
-  margin-inline-end: 0 !important;
-  text-overflow: unset !important;
-  white-space: nowrap !important;
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.select-compact :deep(.v-field__append-inner) {
-  margin-inline-start: -4px !important; /* acerca la flecha del dropdown */
-  padding-inline-start: 0 !important;
-}
-
-.select-compact :deep(.v-field__append-inner .v-icon) {
-  font-size: 16px;
-}
-
-.aligned-field input {
-  text-align: end !important;
-}
-
-/* Aplica color gris a las filas pares */
-.products-gridc tbody tr:nth-child(even) {
-  background-color: #f5f5f5 !important; /* Un gris muy claro */
-}
-
-/* Opcional: Cambiar el color al pasar el mouse (hover) */
-.products-gridc tbody tr:hover {
-  background-color: #eee !important;
-}
-
 .text-column {
-   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif, sans-serif;
-   font-size: 0.85em;
-   line-height: 1 !important;
-   margin-block-start: 1 !important;
- }
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.85em;
+  line-height: 1 !important;
+  margin-block-start: 1 !important;
+}
 
 @media (max-width: 1400px) {
   :deep(.v-data-table) {
     font-size: 0.85em !important;
   }
 }
-</style>
 
-<style>
-/* Estilo GLOBAL, sin scoped, para que penetre cualquier wrapper */
-.aligned-field .v-select__selection-text {
-  /* overflow: visible !important; */
-
-  /* text-overflow: unset !important;
-  white-space: nowrap !important; */
+/* Cambiar el fondo gris de las filas pares (intercaladas) */
+.tabla-facturas tbody tr:nth-child(even) {
+  background-color: #f0f0f0 !important; /* Ajusta el tono de gris */
 }
 
-.aligned-field .v-field__input {
-  padding-inline: 8px !important;
+/* O si quieres que TODAS las filas tengan fondo gris */
+.tabla-facturas tbody tr {
+  background-color: #fff !important;
 }
 
-.cfg_select .v-select__selection-text {
-  font-size: 0.65rem;
+.v-data-table__thead th {
+  background-color: rgb(247, 58, 206) !important;
+  color: white !important;
 }
 
-/* Forzar el fondo negro en el encabezado de esta tabla específica */
+thead th {
+  background-color: rgb(247, 58, 206) !important;
+  color: white !important;
+}
+
+$bg-header: #1e293b;
+$text-header: #fff;
+
+.v-table th {
+  color: #fff !important;
+
+  /* 1. Primera letra de cada palabra en mayúscula */
+  text-transform: capitalize !important;
+
+  /* 2. Centrar el texto junto con los íconos de ordenamiento de Vuetify */
+  :deep(.v-data-table-header__content) {
+    justify-content: center !important;
+  }
+}
+
+.custom-autocomplete-menu {
+  .v-list-item-title {
+    font-size: 0.78rem !important; /* Tamaño del texto de cada opción */
+  }
+
+  .v-list-item {
+    background-color: #e1fce1 !important; /* Cambia este color por el que gustes */
+    color: #333 !important;           /* Color del texto */
+
+    /* 2. Fondo al pasar el cursor por encima (Hover) */
+    &:hover {
+      background-color: #e9ecef !important;
+    }
+  }
+
+  /* 3. Fondo de la opción que está actualmente seleccionada */
+  .v-list-item--active {
+    background-color: #e2e8f0 !important;
+    font-weight: bold;
+  }
+}
+
+.custom-autocomplete .v-field__input,
+.custom-autocomplete .v-field input,
+.custom-autocomplete .v-select__selection,
+.custom-autocomplete .v-select__selection-text {
+  font-size: 0.78rem !important;
+}
+
+.text_size {
+  .v-field__input,
+  input,
+  input::placeholder,
+  .v-label {
+    font-size: 0.78rem !important;
+  }
+}
+
+.aligned-field {
+  .v-field__prepend-inner {
+    margin-inline-end: 0 !important;
+    padding-inline-end: 2px !important;
+  }
+
+  .v-field__input {
+    padding-inline-start: 4px !important;
+  }
+}
 </style>

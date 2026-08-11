@@ -5,7 +5,6 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { computed, ref } from 'vue'
 import * as XLSX from 'xlsx'
-import type { FacturaCxP } from '.'
 
 const isFocused = ref(false)
 const hoy = new Date().toISOString().split('T')[0]
@@ -13,8 +12,8 @@ const token = localStorage.getItem('auth_token')
 const yaBusco = ref(false)
 const loading = ref(false)
 const dialog = ref(false)
-const suppliers = ref([])
-const dctoscxp = ref([])
+const customers = ref([])
+const dctoscxc = ref([])
 
 const showSnackbar = ref(false)
 const snackbarMessage = ref('')
@@ -22,7 +21,7 @@ const snackbarColor = ref('success')
 
 const nameRecordToDelete = ref('')
 const showConfirmDialog = ref(false)
-const recordToDelete = ref<FacturaCxP | null>(null)
+const recordToDelete = ref<SalesInvoice | null>(null)
 
 const tipodeusuario = ref(localStorage.getItem('tipo_de_usuario'))
 
@@ -35,29 +34,35 @@ const formatCurrency = (value: number | string, fractionDigits: number = 2) => {
   })
 }
 
+interface DocsPayment {
+  id: number
+  code: string
+  name: string
+}
+
 const showDialog = ref(false)
 const isPasswordVisible = ref(false)
 
 const searchQuery = ref('')
 const selectedRows = ref([])
 
-const editedItem = ref<FacturaCxP>(getDefaultItem())
-const proveedorSeleccionado = ref<Supplier | null>(null)
-const proveedorInfo = ref<Supplier | null>(null)
-const documentoSeleccionado = ref<DocsPayments | null>(null)
-const documentoinfo = ref<DocsPayments | null>(null)
+const editedItem = ref<SalesInvoice>(getDefaultItem())
+const clienteSeleccionado = ref<Customer | null>(null)
+const clienteInfo = ref<Customer | null>(null)
+const documentoSeleccionado = ref<DocsPayment | null>(null)
+const documentoinfo = ref<DocsPayment | null>(null)
 
 // const desdefecha = ref(hoy)
 // const hastafecha = ref(hoy)
 
 const ValidarCrearFacturas = computed(() => {
-  const faltaProveedor = !proveedorSeleccionado.value
+  const faltaCliente = !clienteSeleccionado.value
   const faltaDocumento = !documentoSeleccionado.value
-  const faltaValorCxp = !editedItem.value?.valor_factura
+  const faltaValorCxc = !editedItem.value?.valor_factura
   const faltanumeroFactura = !editedItem.value?.number
 
   // Validación para cualquier otro tipo de egreso
-  return faltaProveedor || faltaValorCxp || faltaDocumento || faltanumeroFactura
+  return faltaCliente || faltaValorCxc || faltaDocumento || faltanumeroFactura
 })
 
 // 🔹 Variables del DataTable
@@ -78,8 +83,8 @@ const invoiceData = ref({
   TotalValor: 0,
   TotalIva: 0,
   TotalRentabilidad: 0,
-  suppliers: [],
-  dctoscxp: [],
+  customers: [],
+  dctoscxc: [],
   listbalances: [],
   page: 1,
   per_page: 13,
@@ -92,14 +97,13 @@ const invoiceData2 = ref({
   TotalValor: 0,
   TotalIva: 0,
   TotalRentabilidad: 0,
-  suppliers: [],
-  dctoscxp: [],
-  listbalances: [],
+  customers: [],
+  dctoscxc: [],
   page: 1,
   per_page: 13,
 })
 
-function getDefaultItem(): FacturaCxP {
+function getDefaultItem(): SalesInvoice {
   return {
     id: null,
     fecha_factura: hoy,
@@ -119,11 +123,21 @@ function getDefaultItem(): FacturaCxP {
   }
 }
 
+// 🔹 Abrir confirmación de eliminación
+const confirmDelete = (item: any) => {
+  console.log('🛑 Confirmar eliminación de la Factura ID:', item.id)
+  recordToDelete.value = item
+  console.log('Soy Registro Seleccionado: ', recordToDelete.value)
+  nameRecordToDelete.value = `${invoiceData.value.listbalances.find(c => c.id === item.id)?.NombreCliente} NroFactura:${invoiceData.value.listbalances.find(c => c.id === item.id)?.numero_factura}`
+ || ''
+  showConfirmDialog.value = true
+}
+
 const getsuppliersinvoice = async () => {
-  console.log('Id Company:', localStorage.getItem('company_id'))
+  // console.log('Id Company:', localStorage.getItem('company_id'))
   try {
     // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
-    const { data } = await axios.post('/api/get-suppliers-invoice', {
+    const { data } = await axios.post('/api/get-customers-invoice', {
       url_token: localStorage.getItem('auth_token'),
       company_id: localStorage.getItem('company_id'),
       page: page.value,
@@ -135,9 +149,9 @@ const getsuppliersinvoice = async () => {
     )
 
     invoiceData2.value = data
-    console.log('Respuesta API Suppliers Invoice:', invoiceData.value)
-    suppliers.value = invoiceData2.value.suppliers ?? []
-    dctoscxp.value = invoiceData2.value.dctoscxp ?? []
+    console.log('Respuesta API Customers Invoice:', invoiceData.value)
+    customers.value = invoiceData2.value.customers ?? []
+    dctoscxc.value = invoiceData2.value.dctoscxc ?? []
 
     // console.log('Respuesta InvoiceData:', invoiceData.value)
     // ackbar.value = true
@@ -169,7 +183,7 @@ const facturas = computed(() => {
 // console.log('Soy Facturas Recibidas:', facturas.value)
 
 const facturasFiltradas = computed(() => {
-  console.log('Soy Facturas Filtradas:', facturas.value)
+  // console.log('Soy Facturas Filtradas:', facturas.value)
   if (!searchQuery.value || !facturas.value?.length)
     return facturas.value ?? []
   const q = searchQuery.value.toLowerCase()
@@ -188,13 +202,15 @@ const totalInvoices = computed(() =>
 
 // ── Exportar a Excel ──────────────────────────────────────────
 const exportarExcel = () => {
+  // console.log('Información de Facturas para Excel:', facturas.value)
+
   const datos = facturas.value.map(item => ({
     'ID': item.id,
     'Fecha Factura': item.fecha_factura,
     'Fecha Vcmto': item.fecha_vencimiento,
     'Días': item.dias_vencimiento,
-    'Nit/Cédula': item.supplier,
-    'Proveedor': item.proveedor,
+    'Nit/Cédula': item.customer,
+    'Nombre del Cliente': item.NombreCliente,
     'Nro Factura:': item.numero_factura,
     'Prefijo': item.prefix,
     'Tipo Documento': item.document_name,
@@ -205,7 +221,7 @@ const exportarExcel = () => {
 
   // 1. Definir el encabezado/título en un arreglo de arreglos (AOA)
   const encabezado = [
-    ['REPORTE DE FACTURAS DE CUENTAS POR PAGAR'], // Fila 1 (A1)
+    ['REPORTE DE FACTURAS DE CUENTAS POR COBRAR'], // Fila 1 (A1)
     [`Período: ${datafechas.value.desdefecha} al ${datafechas.value.hastafecha}`], // Fila 2 (A2)
     [], // Fila 3 vacía para dar espacio
   ]
@@ -218,13 +234,13 @@ const exportarExcel = () => {
   const libro = XLSX.utils.book_new()
 
   XLSX.utils.book_append_sheet(libro, hojaexcel, 'Facturas')
-  XLSX.writeFile(libro, `Facturas_CxP_${datafechas.value.desdefecha}_${datafechas.value.hastafecha}.xlsx`)
+  XLSX.writeFile(libro, `Facturas_CxC_${datafechas.value.desdefecha}_${datafechas.value.hastafecha}.xlsx`)
 }
 
 const responseData = ref({
   data: [],
   payments: [],
-  suppliers: [],
+  customers: [],
   sources: [],
   otherexpenses: [],
   docspayments: [],
@@ -240,7 +256,7 @@ const exportarPDF = () => {
   const doc = new jsPDF({ orientation: 'landscape' })
 
   doc.setFontSize(14)
-  doc.text('Cuentas por Pagar:', 14, 15)
+  doc.text('Cuentas por Cobrar:', 14, 15)
   doc.setFontSize(9)
   doc.text(`Período: ${datafechas.value.desdefecha}  al  ${datafechas.value.hastafecha}`, 14, 22)
 
@@ -266,7 +282,7 @@ const exportarPDF = () => {
       'Fecha Vcmto',
       'Días',
       'Nit/Cédula',
-      'Proveedor',
+      'Nombre del Cliente',
       'Número',
       'Prefijo',
       'Tdo',
@@ -279,8 +295,8 @@ const exportarPDF = () => {
       item.fecha_factura,
       item.fecha_vencimiento,
       item.dias_vencimiento,
-      item.supplier,
-      item.proveedor,
+      item.customer,
+      item.NombreCliente,
       item.numero_factura,
       item.prefix,
       item.document_name,
@@ -316,7 +332,7 @@ const exportarPDF = () => {
     footStyles: { fillColor: [200, 230, 255], fontStyle: 'bold' },
   })
 
-  doc.save(`Facturas_CxP_${datafechas.value.desdefecha}_${datafechas.value.hastafecha}.pdf`)
+  doc.save(`Facturas_CxC_${datafechas.value.desdefecha}_${datafechas.value.hastafecha}.pdf`)
 }
 
 const generarConsulta = async () => {
@@ -325,7 +341,7 @@ const generarConsulta = async () => {
   loading.value = true
   try {
     // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
-    const { data } = await axios.post('/api/consult-balances-cxp', {
+    const { data } = await axios.post('/api/consult-balances-cxc', {
       url_token: localStorage.getItem('auth_token'),
       company_id: localStorage.getItem('company_id'),
       fechadesde: datafechas.value.desdefecha,
@@ -356,14 +372,21 @@ const generarConsulta = async () => {
   }
 }
 
+const perPage = computed(() => responseData.value.per_page ?? itemsPerPage.value)
+const currentPage = computed(() => responseData.value.page ?? page.value)
+const totalregistros = computed(() => responseData.value?.totaldocumentos ?? 0)
+
 const deleteRecord = async (item: any) => {
   if (!recordToDelete.value)
     return
 
+  // console.log('🗑️ Eliminando Factura - Item :', item)
+  // console.log('🗑️ Eliminando Factura:', recordToDelete.value)
+
   const company_id = localStorage.getItem('company_id')
 
   try {
-    await $api(`/api/delete-invoice-cxp/${item.id}`, {
+    await $api(`/api/delete-invoice-cxc/${item.id}`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
@@ -389,17 +412,13 @@ const deleteRecord = async (item: any) => {
   }
 }
 
-const perPage = computed(() => responseData.value.per_page ?? itemsPerPage.value)
-const currentPage = computed(() => responseData.value.page ?? page.value)
-const totalregistros = computed(() => responseData.value?.totaldocumentos ?? 0)
-
-const saveFacturas = async () => {
+const saveFacturas = async (tipo: number) => {
   console.log('Id Company:', localStorage.getItem('company_id'))
   datafechas.value.desdefecha = '1900-01-01'
   loading.value = true
   try {
     // onsole.log("Generando Consulta con Fechas:", datafechas.value.desdefecha, datafechas.value.hastafecha, "Page:", page.value, "Items/Page:", itemsPerPage.value)
-    const { data } = await axios.post('/api/save-invoice-cxp', {
+    const { data } = await axios.post('/api/save-invoice-cxc', {
       url_token: localStorage.getItem('auth_token'),
       company_id: localStorage.getItem('company_id'),
       fechadesde: datafechas.value.desdefecha,
@@ -433,14 +452,14 @@ const saveFacturas = async () => {
   }
 }
 
-function onProveedorSeleccionado(proveedor: Supplier | null): void {
-  console.log('Entre Aquí Seleccionando Proveedor :', proveedor)
-  proveedorInfo.value = proveedor || null
-  if (proveedor) {
-    console.log('Entre Aquí Seleccionando Proveedor :', `${proveedor.nit} ${proveedor.name}`)
-    editedItem.value.nit = proveedor.nit
-    editedItem.value.branch = proveedor?.branch
-    editedItem.value.supplier_name = proveedor?.name
+function onClienteSeleccionado(cliente: Customer | null): void {
+  console.log('Entre Aquí Seleccionando Cliente :', cliente)
+  clienteInfo.value = cliente || null
+  if (cliente) {
+    console.log('Entre Aquí Seleccionando Cliente :', `${cliente.nit} ${cliente.name}`)
+    editedItem.value.nit = cliente.nit
+    editedItem.value.branch = cliente?.branch
+    editedItem.value.customer_name = cliente?.name
   }
 
   // ... modificas más propiedades de editedItem
@@ -449,22 +468,20 @@ function onProveedorSeleccionado(proveedor: Supplier | null): void {
 function onDocumentoSeleccionado(documento: DocsPayments | null): void {
   documentoinfo.value = documento || null
   if (documento)
-    editedItem.value.document_name = documento.code
-
-  // ... modificas más propiedades de editedItem
+    editedItem.value.document_name = documento.name
 }
 
 const headers = [
-  { title: 'id', key: 'id', sortable: true, width: '4px' },
-  { title: 'Nit/Cédula', key: 'supplier', sortable: true, width: '12%' },
+  { title: 'id', key: 'id', sortable: true, width: '10%' },
+  { title: 'Nit/Cédula', key: 'customer', sortable: true, width: '12%' },
   { title: 'Suc', key: 'branch', sortable: true, width: '4%' },
-  { title: 'Nombre del Proveedor', key: 'proveedor', sortable: true, width: '50%' },
+  { title: 'Nombre del Cliente', key: 'NombreCliente', sortable: true, width: '35%' },
   { title: 'Fecha Factura', key: 'fecha_factura', sortable: true, width: '5%' },
   { title: 'Fecha Vcmto', key: 'fecha_vencimiento', sortable: true, width: '5%' },
   { title: 'Días', key: 'dias_vencimiento', sortable: true, align: 'center' },
   { title: 'Número de Factura', key: 'numero_factura', sortable: true, width: '5px' },
   { title: 'Prefijo', key: 'prefix', sortable: true },
-  { title: 'Tipo Documento', key: 'document_name', sortable: true },
+  { title: 'Tipo Documento', key: 'document_name', sortable: true, width: '10%' },
   { title: 'Valor Factura', key: 'valor_factura', sortable: true, align: 'center' },
   { title: 'Abonos', key: 'abonos', sortable: true, align: 'end' },
   { title: 'Saldo', key: 'saldo', sortable: true, align: 'end' },
@@ -528,17 +545,6 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
   return { formattedValue, onlyNumbersAndDot, isFocused }
 }
 const valueField = useNumericField(editedItem, 'valor_factura')
-
-// 🔹 Abrir confirmación de eliminación
-const confirmDelete = (item: any) => {
-  // console.log('🛑 Confirmar eliminación de la Factura ID:', item.id)
-  recordToDelete.value = item
-
-  // console.log('Soy Registro Seleccionado: ', recordToDelete.value)
-  nameRecordToDelete.value = `${invoiceData.value.listbalances.find(c => c.id === item.id)?.proveedor} NroFactura:${invoiceData.value.listbalances.find(c => c.id === item.id)?.numero_factura}`
- || ''
-  showConfirmDialog.value = true
-}
 </script>
 
 <template>
@@ -551,7 +557,7 @@ const confirmDelete = (item: any) => {
         class="d-flex align-center flex-column"
       >
         <h4 class="text-primary mb-2">
-          Consultar Cuentas por Pagar
+          Consultar Cuentas por Cobrar
         </h4>
         <!-- Campo de búsqueda -->
         <!-- <VCardText class="d-flex align-center flex-wrap gap-4 pb-0"></VCardText> -->
@@ -689,7 +695,7 @@ const confirmDelete = (item: any) => {
 
           <template #item.supplier="{ item }">
             <div class="td-left text-column">
-              {{ item.supplier }}
+              {{ item.customer }}
             </div>
           </template>
 
@@ -761,7 +767,7 @@ const confirmDelete = (item: any) => {
             </div>
           </template>
           <template #item.document_name="{ item }">
-            <div class="td-center text-column">
+            <div class="td-center text-column text-no-wrap">
               {{ item.document_name }}
             </div>
           </template>
@@ -845,7 +851,7 @@ const confirmDelete = (item: any) => {
                 md="4"
               >
                 <div class="text-caption text-medium-emphasis ps-4 text-end">
-                  Total CxP $:
+                  Total CxC $:
                   <strong class="text-primary">{{ formatCurrency(totalInvoices) }}</strong>
                 </div>
                 <!--
@@ -888,7 +894,15 @@ const confirmDelete = (item: any) => {
           color="white"
           class="me-3"
         />
-        Reporte de Factura de Cuentas por Pagar
+        Reporte de Factura de Cuentas por Cobrar
+        <!--
+          <span
+          class="text-h6 font-weight-bold ml-2"
+          style="color: #f7fb2d !important;"
+          >
+          Texto de Prueba
+          </span>
+        -->
       </VCardTitle>
 
       <VCardText class="py-0">
@@ -910,11 +924,11 @@ const confirmDelete = (item: any) => {
                 class="py-0"
               >
                 <VAutocomplete
-                  v-model="proveedorSeleccionado"
-                  :items="suppliers"
+                  v-model="clienteSeleccionado"
+                  :items="customers"
                   item-title="name"
                   item-value="id"
-                  label="Nombre del Proveedor"
+                  label="Nombre del Cliente"
                   prepend-inner-icon="mdi-magnify"
                   variant="outlined"
                   density="comfortable"
@@ -923,7 +937,7 @@ const confirmDelete = (item: any) => {
                   required
                   class="custom-autocomplete mt-3 text_size bg-yellow-light"
                   :menu-props="{ contentClass: 'custom-autocomplete-menu' }"
-                  @update:model-value="onProveedorSeleccionado"
+                  @update:model-value="onClienteSeleccionado"
                 >
                   <template #prepend-inner>
                     <VIcon
@@ -1013,7 +1027,7 @@ const confirmDelete = (item: any) => {
               >
                 <VAutocomplete
                   v-model="documentoSeleccionado"
-                  :items="dctoscxp"
+                  :items="dctoscxc"
                   item-title="name"
                   item-value="document_name"
                   label="Tipo de Documento"
@@ -1131,9 +1145,9 @@ const confirmDelete = (item: any) => {
               >
                 <AppTextField
                   v-model="valueField.formattedValue.value"
-                  label="Valor del Pago:"
+                  label="Valor de la Factura:"
                   class="mb-2 text_size"
-                  placeholder="Valor del Pago"
+                  placeholder="Valor de la Factura"
                   density="comfortable"
                   variant="outlined"
                   hide-details
@@ -1176,6 +1190,15 @@ const confirmDelete = (item: any) => {
       </VCardText>
       <VDivider class="py-2 w-100" />
       <VCardActions>
+        <!--
+          <VBtn
+          color="blue-darken-1"
+          variant="text"
+          @click="list"
+          >
+          Listar
+          </VBtn>
+        -->
         <VBtn
           width="120"
           min-width="0"
@@ -1228,7 +1251,7 @@ const confirmDelete = (item: any) => {
         {{ nameRecordToDelete }}
       </VCardTitle>
       <VCardText class="text-center">
-        ¿Está seguro que desea eliminar esta Factura de Compra ?<br>
+        ¿Está seguro que desea eliminar esta Factura ?<br>
         <strong>Esta acción no se puede deshacer.</strong>
       </VCardText>
       <VCardActions class="justify-center pb-4">
