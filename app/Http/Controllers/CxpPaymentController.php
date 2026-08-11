@@ -548,7 +548,7 @@ class CxpPaymentController extends Controller
         $suc          = $request->input('sucursal');
         $companies_id = $request->input('company_id');
 
-        // 1. SUBCONSULTA DE ABONOS: Consolidada estrictamente por purchases_invoice_id
+        // 1. SUBCONSULTA DE ABONOS: Consolidada por purchases_invoice_id
         $paymentsSubquery = DB::table('detail_cxp_payments')
             ->select(
                 'purchases_invoice_id',
@@ -566,7 +566,7 @@ class CxpPaymentController extends Controller
             ->whereNotNull('purchases_invoice_id')
             ->groupBy('purchases_invoice_id', 'companies_id');
 
-        // 2. CONSULTA PRINCIPAL: Unir facturas de compra con abonos consolidados
+        // 2. CONSULTA PRINCIPAL: Filtrada por facturas con saldo pendiente
         $listado = DB::table('purchases_invoices as pi')
             ->leftJoinSub($paymentsSubquery, 'dp', function ($join) {
                 $join->on('pi.id', '=', 'dp.purchases_invoice_id')
@@ -591,6 +591,8 @@ class CxpPaymentController extends Controller
             )
             ->where('pi.companies_id', $companies_id)
             ->where('pi.state', 'Activo')
+            // FILTRO: Solo facturas con saldo pendiente mayor a 0
+            ->whereRaw('(COALESCE(pi.total_purchase, 0) - COALESCE(dp.abonos, 0)) > 0')
             ->when($fechadesde && $fechahasta, function ($query) use ($fechadesde, $fechahasta) {
                 $query->whereBetween('pi.date_issue', [$fechadesde, $fechahasta]);
             })
@@ -608,7 +610,7 @@ class CxpPaymentController extends Controller
 
         return response()->json([
             'success'         => true,
-            'message'         => 'Listado CXP Generado Exitosamente',
+            'message'         => 'Listado CXP con saldo generado exitosamente',
             'listbalances'    => $listado,
             'totales'         => $totales,
             'totaldocumentos' => $listado->count(),
