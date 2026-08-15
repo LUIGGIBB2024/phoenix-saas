@@ -574,7 +574,7 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
                 md="4"
               >
                 <div class="text-caption text-medium-emphasis ps-4 text-end">
-                  Total CxC $:
+                  Saldo Actual $:
                   <strong class="text-primary">{{ formatCurrency(totalInvoices) }}</strong>
                 </div>
                 <!--

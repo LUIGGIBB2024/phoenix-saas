@@ -250,7 +250,7 @@ const itemAEliminar = ref<ItemFactura | null>(null)
 // ===================== Mensajes =====================
 const mostrarMensaje = ref<boolean>(false)
 const textoMensaje = ref<string>('')
-const colorMensaje = ref<string>('success')
+const colorMensaje = ref<string>('error')
 
 // ===================== Computados =====================
 // const productosDisponibles = computed<Producto[]>(() =>
@@ -377,14 +377,15 @@ function agregarProducto(): void {
     return
 
   const stockDisponible = aNumero(productoSeleccionado.value.quantity)
-  if (cantidadAgregar.value > stockDisponible) {
-    mostrarSnack('La cantidad supera el saldo de inventario disponible', 'warning')
 
-    return
-  }
+  // if (cantidadAgregar.value > stockDisponible) {
+  //   mostrarSnack('La cantidad supera el saldo de inventario disponible', 'warning')
+
+  //   return
+  // }
 
   if (precioUnitarioManual.value < 0) {
-    mostrarSnack('El precio unitario no puede ser negativo', 'warning')
+    mostrarSnack('El precio unitario no puede ser negativo', 'error')
 
     return
   }
@@ -440,7 +441,7 @@ function eliminarItemConfirmado(): void {
   dialogEliminacion.value = false
   indiceAEliminar.value = null
   itemAEliminar.value = null
-  mostrarSnack('Producto eliminado de la factura', 'success')
+  mostrarSnack('Producto eliminado de la factura', 'error')
 }
 
 // ===================== Edición de línea =====================
@@ -459,7 +460,7 @@ function guardarEdicion(): void {
     return
 
   if (formEdicion.cantidad <= 0 || formEdicion.cantidad > stockDisponibleParaEdicion.value) {
-    mostrarSnack('La cantidad ingresada no es válida para el saldo disponible', 'warning')
+    mostrarSnack('La cantidad ingresada no es válida para el saldo disponible', 'error')
 
     return
   }
@@ -654,9 +655,7 @@ function seleccionarClientePorDefecto(): void {
 //   productos.filter(p => aNumero(p.quantity) > 0),
 // )
 
-const productosDisponibles = computed(() =>
-  products.value.filter(p => aNumero(p.quantity) !== 0),
-)
+const productosDisponibles = computed(() => products.value)
 
 // const productosDisponibles = computed(() =>
 //   products.value.filter(p => aNumero(p.quantity) > 0),
@@ -874,6 +873,20 @@ if (producto)
                     {{ itemsFactura.length }} ítem(s)
                   </VChip>
                 </VCardTitle>
+                <VSnackbar
+                  v-model="mostrarMensaje"
+                  :color="colorMensaje"
+                  timeout="2500"
+                  rounded="lg"
+                  location="center"
+                >
+                  <span
+                    class="text-white font-weight-bold"
+                    style="font-size: 18px;"
+                  >
+                    {{ textoMensaje }}
+                  </span>
+                </VSnackbar>
                 <VCardText class="pt-0">
                   <VTable
                     v-if="itemsFactura.length"
@@ -1321,15 +1334,6 @@ if (producto)
                 </VCardActions>
               </vcard>
             </VCol>
-
-            <VSnackbar
-              v-model="mostrarMensaje"
-              :color="colorMensaje"
-              timeout="2500"
-              rounded="lg"
-            >
-              {{ textoMensaje }}
-            </VSnackbar>
 
             <!-- ===================== DIÁLOGO: Editar línea de la factura ===================== -->
             <VDialog

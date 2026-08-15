@@ -128,7 +128,7 @@ const menu_super: NavItem_Saas[] = [
     icon: { icon: 'tabler-report-search' },
     roles: ['admin', 'operador'],
     children: [
-      { title: 'Cuadre de Caja', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-brand-cashapp', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
+      { title: 'Cuadre de Caja', to: { name: 'recibosdecaja-cuadredecaja' }, icon: { icon: 'tabler-brand-cashapp', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
       { title: 'Facturación Diaria', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Cuentas por Cobrar', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
       { title: 'Cuentas por Pagar', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },

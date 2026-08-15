@@ -537,16 +537,22 @@ const formatCurrency = (value: number | string) => {
   return num.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// Instancias la función para cada campo de tu formulario
+//
+
 function useNumericField(targetObject, propertyName, maxDecimals = 2) {
-  // const isFocused = ref(false)
+  const isFocused = ref(false)
+  const rawInput = ref('') // Guarda el texto exacto que escribe el usuario mientras tiene el foco
 
   const formattedValue = computed({
     get() {
+      // Si está enfocado, muestra lo que el usuario está tipeando (ej: "-")
+      if (isFocused.value)
+        return rawInput.value
+
       const value = targetObject.value[propertyName]
       if (value === null || value === undefined || value === '')
         return ''
-      if (isFocused.value)
-        return value
 
       return new Intl.NumberFormat('en-US', {
         minimumFractionDigits: 0,
@@ -554,28 +560,49 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
       }).format(value)
     },
     set(newValue) {
+      rawInput.value = newValue
+
+      // Permite escribir solo el signo '-' sin que se vuelva null de inmediato
+      if (newValue === '-' || newValue === '' || newValue === null) {
+        targetObject.value[propertyName] = null
+
+        return
+      }
+
       const parsed = Number.parseFloat(newValue)
 
       targetObject.value[propertyName] = isNaN(parsed) ? null : parsed
     },
   })
 
+  // Permite números, punto decimal y el signo menos
   const onlyNumbersAndDot = event => {
-    const charCode = event.which ? event.which : event.keyCode
-    if (charCode === 46) {
-      if (String(formattedValue.value).includes('.'))
-        event.preventDefault()
+    const char = event.key
+    const currentValue = event.target.value
 
+    // Permitir dígitos 0-9
+    if (/^\d$/.test(char))
       return true
-    }
-    if (charCode >= 48 && charCode <= 57)
+
+    // Permitir un solo punto
+    if (char === '.' && !currentValue.includes('.'))
       return true
+
+    // Permitir el signo menos '-' únicamente al principio si no tiene uno ya
+    if (char === '-' && !currentValue.includes('-'))
+      return true
+
     event.preventDefault()
   }
 
-  return { formattedValue, onlyNumbersAndDot, isFocused }
-}// Instancias la función para cada campo de tu formulario
-// const totalField = useNumericField(newRecord, 'total_amount')
+  return {
+    formattedValue,
+    isFocused,
+    onlyNumbersAndDot,
+  }
+}
+
+const totalField = useNumericField(newRecord, 'total_amount')
 const costField = useNumericField(newRecord, 'cost')
 const quantityField = useNumericField(newRecord, 'quantity')
 const cost00Field = useNumericField(newRecord, 'cost00')
