@@ -147,6 +147,7 @@ class CxcPaymentController extends Controller
                 'document'          => 'nullable|string|max:20',
                 'customer_name'     => 'nullable|string|max:255',
                 'value_cxc'         => 'nullable|numeric|between:0,999999999999999999.99',
+                'payments_others'   => 'nullable|numeric|between:0,999999999999999999.99',
                 'customer_balances' => 'nullable|numeric|between:0,999999999999999999.99',
                 'observations'      => 'nullable|string|max:255',
                 'check_number'      => 'nullable|integer',
@@ -165,6 +166,7 @@ class CxcPaymentController extends Controller
 
             // 2. Mapear 'company_id' al campo real 'companies_id'
             $validated['companies_id'] =  $companies_id;
+            $validated['payments_others'] =  0;
             //unset($validated['company_id']);
 
             // Asignar el usuario creador
@@ -613,6 +615,8 @@ class CxcPaymentController extends Controller
         $company        = Company::where('id', $companies_id)->first();
         $saldoinicial   = (float) ($company->opening_balance ?? 0);
 
+
+
         // 1. Obtener Ventas (Ingresos)
         $ventas = SalesInvoice::select('date_issue as report_date', 'document_name', 'number', 'prefix', 'client_name as name')
             ->selectRaw("0.00 as saldoinicial, total_sale as ingresos, 0.00 as pagos, 0.00 as saldoactual, 
@@ -663,7 +667,11 @@ class CxcPaymentController extends Controller
         // $movimientos = $movimientos->sortBy('number')->values();
 
         // 4. Recorrer la colección unificada y calcular saldos en cascada
-        $saldo = $saldoinicial;
+
+        $saldoacumulado = $this->previous_balance($companies_id, $fechahasta);
+
+
+        $saldo = $saldoinicial +  $saldoacumulado;
 
         foreach ($movimientos as $mov) {
             $mov->saldoinicial = $saldo;
@@ -676,17 +684,149 @@ class CxcPaymentController extends Controller
             $mov->saldoactual = $saldo;
         }
 
+
+
         // 5. Retornar la respuesta con la lista de movimientos unificada
+
+        $acumulados = $this->accumulated_data($companies_id, $fechahasta);
+
         return response()->json([
-            'openingbalance' => $saldoinicial,
-            'saldoactual'    => $saldo,
-            'movements'    => $movimientos,
-            'success'        => true,
-            'message'        => 'Consulta Generada Exitosamente.',
+            'openingbalance'    => ($saldoacumulado + $saldoinicial),
+            'saldoactual'       => $saldo,
+            'movements'         => $movimientos,
+            'accumulated'       => $acumulados,
+            'success'           => true,
+            'message'           => 'Consulta Generada Exitosamente.',
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
-}
 
+
+    public function  accumulated_data($companies_id, $fechahasta)
+    {
+
+        // Procesar Facturas de Contado
+        $ventascdo = DB::table('sales_invoices')
+            ->selectRaw('sum(total_sale) as acumulado')
+            ->where('type', 'Contado')
+            ->where('state', 'Activo')
+            ->where('payment_methods_id', 10)
+            ->where('date_issue', '=', $fechahasta)
+            ->where('sales_invoices.companies_id', $companies_id)
+            ->first();
+
+        // Lo conviertes a float aquí de forma segura
+        $acumuladovtacdo = $ventascdo ? (float) $ventascdo->acumulado : 0.0;
+
+        // Procesar Facturas de Contado - Otros Métodos de Pagos
+        $ventascdo_otros = DB::table('sales_invoices')
+            ->selectRaw('sum(total_sale) as acumulado')
+            ->where('type', 'Contado')
+            ->where('state', 'Activo')
+            ->where('payment_methods_id', '<>', 10)
+            ->where('date_issue', '=', $fechahasta)
+            ->where('sales_invoices.companies_id', $companies_id)
+            ->first();
+
+        // Lo conviertes a float aquí de forma segura
+        $acumuladovtacdo_otros = $ventascdo_otros ? (float) $ventascdo_otros->acumulado : 0.0;
+
+        // Procesar Facturas de Crédito
+        $ventascre = DB::table('sales_invoices')
+            ->selectRaw('sum(total_sale) as acumulado')
+            ->where('type', 'Credito')
+            ->where('state', 'Activo')
+            ->where('date_issue', '=', $fechahasta)
+            ->where('sales_invoices.companies_id', $companies_id)
+            ->first();
+
+        // Lo conviertes a float aquí de forma segura
+        $acumuladovtacre = $ventascre ? (float) $ventascre->acumulado : 0.0;
+
+        // Procesar Pagos en Efectivo
+        $pagosefe = DB::table('cxp_payments')
+            ->selectRaw('SUM(cxp_payments.value_cxp) as acumulado')
+            ->join('source_payments as n', function ($join) use ($companies_id) {
+                $join->on('n.code', '=', 'cxp_payments.payment_method')
+                    ->where('n.companies_id', $companies_id);
+            })
+            ->where('cxp_payments.state', 'Activo')
+            ->where('n.type', 'Pagos en Efectivo')
+            ->where('cxp_payments.report_date', '=', $fechahasta)
+            ->where('cxp_payments.companies_id', $companies_id)
+            ->first();
+
+        $acumuladopagosefe = $pagosefe ? (float) $pagosefe->acumulado : 0.0;
+
+        // Procesar Pagos por Transferencias / Cheques / otros
+        $pagosotros = DB::table('cxp_payments')
+            ->selectRaw('SUM(cxp_payments.value_cxp) as acumulado')
+            ->join('source_payments as n', function ($join) use ($companies_id) {
+                $join->on('n.code', '=', 'cxp_payments.payment_method')
+                    ->where('n.companies_id', $companies_id);
+            })
+            ->where('cxp_payments.state', 'Activo')
+            ->where('n.type', '<>', 'Pagos en Efectivo')
+            ->where('cxp_payments.report_date', '=', $fechahasta)
+            ->where('cxp_payments.companies_id', $companies_id)
+            ->first();
+
+        $acumuladopagosotros = $pagosotros ? (float) $pagosotros->acumulado : 0.0;
+
+        return [
+            'ventascontado'       => $acumuladovtacdo,
+            'ventascontado_otros' => $acumuladovtacdo_otros,
+            'ventascredito'       => $acumuladovtacre,
+            'recibosdecaja'       => 0,
+            'egresosefectivo'     => $acumuladopagosefe,
+            'egresos_otros'       => $acumuladopagosotros,
+        ];
+    }
+
+    public function previous_balance($companies_id, $fechahasta)
+    {
+        // Procesar Facturas de Contado
+        $ventas = DB::table('sales_invoices')
+            ->selectRaw('sum(total_sale) as acumulado')
+            ->where('type', 'Contado')
+            ->where('state', 'Activo')
+            ->where('payment_methods_id', 10)
+            ->where('date_issue', '<', $fechahasta)
+            ->where('sales_invoices.companies_id', $companies_id)
+            ->first();
+
+        // Lo conviertes a float aquí de forma segura
+        $acumulado1 = $ventas ? (float) $ventas->acumulado : 0.0;
+
+        // Procesar Pagos
+        $pagos = DB::table('cxp_payments')
+            ->selectRaw('SUM(cxp_payments.value_cxp) as acumulado')
+            ->join('source_payments as n', function ($join) use ($companies_id) {
+                $join->on('n.code', '=', 'cxp_payments.payment_method')
+                    ->where('n.companies_id', $companies_id);
+            })
+            ->where('cxp_payments.state', 'Activo')
+            ->where('n.type', 'Pagos en Efectivo')
+            ->where('cxp_payments.report_date', '<', $fechahasta)
+            ->where('cxp_payments.companies_id', $companies_id)
+            ->first();
+
+        // Conversión a float manual y segura:
+        $acumulado2 = $pagos ? (float) $pagos->acumulado : 0.0;
+
+        // Procesar Ingresos en Efectivo
+        $recibos = DB::table('cxc_payments')
+            ->selectRaw('SUM(cxc_payments.value_cxc) as acumulado')
+            ->where('cxc_payments.state', 'Activo')
+            ->where('cxc_payments.report_date', '<', $fechahasta)
+            ->where('cxc_payments.companies_id', $companies_id)
+            ->first();
+
+        // Conversión a float manual y segura:
+        $acumulado3 = $recibos ? (float) $recibos->acumulado : 0.0;
+
+        return ($acumulado1 + $acumulado2 + $acumulado3);
+    }
+}
 
 
 //getCustomerPayments

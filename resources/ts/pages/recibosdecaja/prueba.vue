@@ -66,7 +66,6 @@ const recordData = ref({
   dctoscxc: [],
   listbalances: [],
   movements: [],
-  accumulated: [],
   page: 1,
   per_page: 13,
 })
@@ -246,7 +245,7 @@ const generarConsulta = async () => {
     recordData.value = data
     responseData.value = data
 
-    console.log('Respuesta API SaldoInicial:', recordData.value)
+    // console.log('Respuesta API SaldoInicial:', recordData.value)
 
     // console.log('Respuesta InvoiceData:', invoiceData.value)
     yaBusco.value = true // Marcar que ya se realizó una búsqueda
@@ -338,7 +337,7 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
 </script>
 
 <template>
-  <!-- Card de Filtros (Encabezado) -->
+  <!-- <VCard class="mb-2" style="height: 13vh !important;"">  -->
   <VCard class="mb-2 py-3 px-4">
     <VRow class="align-center">
       <VCol
@@ -349,6 +348,22 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
         <h3 class="text-primary mb-2">
           Cuadre de Caja
         </h3>
+        <!-- Campo de búsqueda -->
+        <!-- <VCardText class="d-flex align-center flex-wrap gap-4 pb-0"></VCardText> -->
+        <!--
+          <VCardText class="d-flex align-center flex-wrap gap-4 pa-0">
+          <VTextField
+          v-model="searchQuery"
+          placeholder="Buscar..."
+          density="compact"
+          prepend-inner-icon="tabler-search"
+          variant="outlined"
+          clearable
+          hide-details
+          style="inline-size: 20em;max-inline-size: 300px;"
+          />
+          </VCardText>
+        -->
       </VCol>
 
       <VCol
@@ -365,7 +380,6 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
           :config="{ locale: Spanish, dateFormat: 'Y-m-d' }"
         />
       </VCol>
-
       <VCol
         cols="12"
         md="2"
@@ -392,6 +406,24 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
         md="3"
         class="d-flex align-center justify-start mt-md-5 mt-2 gap-2"
       >
+        <!--
+          <VBtn
+          class="boton-export"
+          rounded="pill"
+          color="success"
+          variant="flat"
+          :disabled="!facturas?.length"
+          @click="exportarExcel"
+          >
+          <VIcon
+          start
+          icon="tabler-file-spreadsheet"
+          witdh="100"
+          />
+          Excel
+          </VBtn>
+        -->
+
         <VBtn
           class="boton-export"
           rounded="pill"
@@ -403,434 +435,195 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
           <VIcon
             start
             icon="tabler-file-type-pdf"
-            width="100"
+            witdh="100"
           />
           PDF
         </VBtn>
+
+        <!--
+          <VBtn
+          class="boton-export"
+          rounded="pill"
+          color="secondary"
+          variant="flat"
+          @click="openCreateDialog"
+          >
+          <VIcon
+          start
+          icon="tabler-copy-plus"
+          witdh="100"
+          />
+          FACT
+          </VBtn>
+        -->
       </VCol>
     </VRow>
   </VCard>
 
-  <!-- Contenedor Principal en 2 Columnas -->
-  <VRow v-if="documentos && documentos.length">
-    <!-- Columna Izquierda: VDataTable (Ocupa 9 columnas en pantallas md/desktop) -->
-    <VCol
+  <section v-if="documentos && documentos.length">
+    <VCard
       cols="12"
       md="9"
     >
-      <VCard>
-        <div class="table-responsive">
-          <VDataTable
-            v-model:model-value="selectedRows"
-            v-model:items-per-page="itemsPerPage"
-            v-model:page="page"
-            :headers="headers"
-            :items="documentos"
-            item-value="id"
-            :search="searchQuery"
-            :cell-props="cellProps"
-            :header-props="headerProps"
-            class="text-body-2 tabla-facturas custom-table"
-            fixed-header
-            density="compact"
-            striped="even"
-          >
-            <template #item.report_date="{ item }">
-              <div class="td-left text-column">
-                {{ item.report_date }}
-              </div>
-            </template>
-
-            <template #item.document_name="{ item }">
-              <div class="td-left text-column">
-                {{ item.document_name }}
-              </div>
-            </template>
-
-            <template #item.number="{ item }">
-              <div class="td-left text-column">
-                {{ item.number }}
-              </div>
-            </template>
-
-            <template #item.prefix="{ item }">
-              <div class="td-left text-column">
-                {{ item.prefix }}
-              </div>
-            </template>
-
-            <template #item.name="{ item }">
-              <div class="td-left text-column">
-                {{ item.name }}
-              </div>
-            </template>
-
-            <template #item.calculo="{ item }">
-              <div class="td-left text-column">
-                {{ item.calculo }}
-              </div>
-            </template>
-
-            <template #item.saldoinicial="{ item }">
-              <div class="td-right text-column text-end">
-                {{ formatCurrency(Number(item.saldoinicial)) }}
-              </div>
-            </template>
-
-            <template #item.ingresos="{ item }">
-              <div class="td-right text-column text-end">
-                {{ formatCurrency(Number(item.ingresos)) }}
-              </div>
-            </template>
-
-            <template #item.pagos="{ item }">
-              <div class="td-right text-column text-end">
-                {{ formatCurrency(Number(item.pagos)) }}
-              </div>
-            </template>
-
-            <template #item.saldoactual="{ item }">
-              <div class="td-right text-column text-end">
-                {{ formatCurrency(Number(item.saldoactual)) }}
-              </div>
-            </template>
-
-            <template #item.actions="{ item }">
-              <IconBtn
-                :disabled="tipodeusuario === 'Operador'"
-                @click="confirmDelete(item)"
-              >
-                <VIcon
-                  icon="tabler-trash"
-                  color="primary"
-                  size="18"
-                />
-              </IconBtn>
-            </template>
-
-            <!-- Slot Bottom -->
-            <template #bottom>
-              <VDivider />
-              <VRow class="mt-2 mx-0 pb-2 align-center">
-                <VCol
-                  cols="12"
-                  md="4"
-                >
-                  <div class="text-caption text-medium-emphasis ps-4">
-                    Mostrando
-                    <strong>{{ (currentPage - 1) * perPage + 1 }}</strong>–
-                    <strong>{{ Math.min(currentPage * perPage, totalregistros) }}</strong>
-                    de <strong>{{ totalregistros }}</strong> registros
-                  </div>
-                </VCol>
-                <VCol
-                  cols="12"
-                  md="4"
-                  class="d-flex justify-center pagination-wrapper"
-                >
-                  <VPagination
-                    v-model="page"
-                    :length="Math.ceil(totalregistros / perPage)"
-                    rounded="circle"
-                    size="large"
-                    :total-visible="5"
-                  />
-                </VCol>
-                <VCol
-                  cols="12"
-                  md="4"
-                >
-                  <div class="text-caption text-medium-emphasis ps-4 text-end">
-                    Saldo Actual $:
-                    <strong class="text-primary">{{ formatCurrency(recordData.saldoactual) }}</strong>
-                  </div>
-                </VCol>
-              </VRow>
-            </template>
-          </VDataTable>
-        </div>
-      </VCard>
-    </VCol>
-
-    <!-- Columna Derecha: Tarjeta de Información Adicional (Ocupa 3 columnas) -->
-    <!-- Columna Derecha: Tarjeta de Resumen Financiero -->
-    <!-- Columna Derecha: Tarjeta de Resumen Financiero (Compacta) -->
-    <VCol
-      cols="12"
-      md="3"
-    >
-      <VCard class="h-100 border pa-0">
-        <!-- Encabezado con padding vertical reducido (py-2) -->
-        <VCardItem class="py-2 px-3">
-          <template #prepend>
-            <VAvatar
-              color="primary"
-              variant="tonal"
-              rounded
-              size="32"
-            >
-              <VIcon
-                icon="tabler-chart-pie"
-                size="20"
-              />
-            </VAvatar>
+      <div class="table-responsive">
+        <VDataTable
+          v-model:model-value="selectedRows"
+          v-model:items-per-page="itemsPerPage"
+          v-model:page="page"
+          :headers="headers"
+          :items="documentos"
+          item-value="id"
+          :search="searchQuery"
+          :cell-props="cellProps"
+          :header-props="headerProps"
+          class="text-body-2 tabla-facturas custom-table"
+          fixed-header
+          density="compact"
+          striped="even"
+        >
+          <template #item.report_date="{ item }">
+            <div class="td-left text-column">
+              {{ item.report_date }}
+            </div>
           </template>
-          <VCardTitle class="text-subtitle-1 font-weight-bold">
-            Resumen de Caja
-          </VCardTitle>
-          <VCardSubtitle class="text-caption">
-            Indicadores clave
-          </VCardSubtitle>
-        </VCardItem>
 
-        <VDivider />
-
-        <!-- Contenedor con espacio vertical ajustado (py-2, gap-y-2) -->
-        <VCardText class="d-flex flex-column gap-y-2 py-2 px-3">
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="success"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-businessplan"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Saldo Inicial
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Acumulado Anterior
-                </div>
-              </div>
+          <template #item.document_name="{ item }">
+            <div class="td-left text-column">
+              {{ item.document_name }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-success">
-              {{ formatCurrency(recordData.openingbalance || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <VDivider style="border-style: dashed;" />
-          <!-- Item: Ventas de Contado -->
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="success"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-cash"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Ventas Contado
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Ingresos directos
-                </div>
-              </div>
+          <template #item.number="{ item }">
+            <div class="td-left text-column">
+              {{ item.number }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-success">
-              {{ formatCurrency(recordData.accumulated.ventascontado || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <VDivider style="border-style: dashed;" />
-
-          <!-- Item: Ventas a Crédito -->
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="info"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-credit-card"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Otros Ingresos
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Transferencia / TC / TD
-                </div>
-              </div>
+          <template #item.prefix="{ item }">
+            <div class="td-left text-column">
+              {{ item.prefix }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-info">
-              {{ formatCurrency(recordData.accumulated.ventascontado_otros || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <VDivider style="border-style: dashed;" />
-
-          <!-- Item: Ventas a Crédito -->
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="info"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-creative-commons-nc"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Ventas Crédito
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Cuentas por cobrar
-                </div>
-              </div>
+          <template #item.name="{ item }">
+            <div class="td-left text-column">
+              {{ item.name }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-info">
-              {{ formatCurrency(recordData.accumulated.ventascredito || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <VDivider style="border-style: dashed;" />
-
-          <!-- Item: Ventas a Crédito -->
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="warning"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-brand-cashapp"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Recibos de Caja
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Ingresos en Efectivo
-                </div>
-              </div>
+          <template #item.calculo="{ item }">
+            <div class="td-left text-column">
+              {{ item.calculo }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-info">
-              {{ formatCurrency(recordData.accumulated.recibosdecaja || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <VDivider style="border-style: dashed;" />
-
-          <!-- Item: Total Egresos -->
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="error"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-arrow-up-right"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Total Egresos
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Pagos de efectivo
-                </div>
-              </div>
+          <template #item.saldoinicial="{ item }">
+            <div class="td-right text-column text-end">
+              {{ formatCurrency(Number(item.saldoinicial)) }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-error">
-              {{ formatCurrency(recordData.accumulated.egresosefectivo || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <VDivider style="border-style: dashed;" />
-
-          <!-- Item: Total Egresos -->
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center gap-x-2">
-              <VAvatar
-                color="error"
-                variant="tonal"
-                size="32"
-                rounded
-              >
-                <VIcon
-                  icon="tabler-receipt-dollar"
-                  size="18"
-                />
-              </VAvatar>
-              <div>
-                <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  Total Egresos
-                </div>
-                <div class="text-caption text-medium-emphasis text-micro">
-                  Pagos por transferencias/Otros
-                </div>
-              </div>
+          <template #item.ingresos="{ item }">
+            <div class="td-right text-column text-end">
+              {{ formatCurrency(Number(item.ingresos)) }}
             </div>
-            <span class="text-subtitle-2 font-weight-bold text-error">
-              {{ formatCurrency(recordData.accumulated.egresos_otros || 0) }}
-            </span>
-          </div>
+          </template>
 
-          <!-- Destacado: Saldo Final Neto (Padding interno reducido a pa-2 y mt-1) -->
-          <div class="mt-1 pa-2 rounded-lg bg-var-theme-background border d-flex align-center justify-space-between">
-            <div>
-              <div class="text-caption font-weight-bold text-uppercase text-medium-emphasis text-micro">
-                Saldo Neto en Caja
-              </div>
-              <div class="text-subtitle-1 font-weight-bold text-primary">
-                {{ formatCurrency(recordData.saldoactual || 0) }}
-              </div>
+          <template #item.pagos="{ item }">
+            <div class="td-right text-column text-end">
+              {{ formatCurrency(Number(item.pagos)) }}
             </div>
-            <VAvatar
-              color="primary"
-              variant="flat"
-              size="32"
+          </template>
+
+          <template #item.saldoactual="{ item }">
+            <div class="td-right text-column text-end">
+              {{ formatCurrency(Number(item.saldoactual)) }}
+            </div>
+          </template>
+
+          <template #item.actions="{ item }">
+            <IconBtn
+              :disabled="tipodeusuario === 'Operador'"
+              @click="confirmDelete(item)"
             >
               <VIcon
-                icon="tabler-wallet"
+                icon="tabler-trash"
+                color="primary"
                 size="18"
               />
-            </VAvatar>
-          </div>
-        </VCardText>
-      </VCard>
-    </VCol>
-  </VRow>
+            </IconBtn>
+          </template>
 
-  <!-- Mensaje si no hay registros -->
-  <VRow v-else>
-    <VCol cols="12">
-      <VCard>
-        <VCardTitle class="pa-4">
-          No se encontraron registros para el periodo seleccionado
-        </VCardTitle>
-      </VCard>
-    </VCol>
-  </VRow>
+          <!-- Slot Bottom -->
+          <template #bottom>
+            <VDivider />
+            <VRow class="mt-2 mx-0 pb-2 align-center">
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <div class="text-caption text-medium-emphasis ps-4">
+                  Mostrando
+                  <strong>{{ (currentPage - 1) * perPage + 1 }}</strong>–
+                  <strong>{{ Math.min(currentPage * perPage, totalregistros) }}</strong>
+                  de <strong>{{ totalregistros }}</strong> registros
+                </div>
+              </VCol>
+              <VCol
+                cols="12"
+                md="4"
+                class="d-flex justify-center pagination-wrapper"
+              >
+                <VPagination
+                  v-model="page"
+                  :length="Math.ceil(totalregistros / perPage)"
+                  rounded="circle"
+                  size="large"
+                  :total-visible="5"
+                />
+              </VCol>
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <div class="text-caption text-medium-emphasis ps-4 text-end">
+                  Saldo Actual $:
+                  <strong class="text-primary">{{ formatCurrency(recordData.saldoactual) }}</strong>
+                </div>
+                <!--
+                  <div class="text-caption text-medium-emphasis ps-4 text-end">
+                  Total Iva $:
+                  <strong class="text-error">{{ formatCurrency(totalIva) }}</strong>
+                  </div>
+                  <div class="text-caption text-medium-emphasis ps-4 text-end">
+                  Total Rentabilidad $:
+                  <strong class="text-success">{{ formatCurrency(totalRentabilidad) }}</strong>
+                  </div>
+                -->
+              </VCol>
+            </VRow>
+          </template>
+        </VDataTable>
+      </div>
+    </VCard>
+  </section>
+  <section v-else-if="(!documentos || !documentos.length)">
+    <VCard>
+      <VCardTitle class="pa-4">
+        No se encontraron registros para el periodo seleccionado
+      </VCardTitle>
+    </VCard>
+  </section>
 
-  <!-- Notification Snackbar -->
+  <VCard
+    cols="12"
+    md="3"
+  >
+    <div>
+      Hola
+    </div>
+  </vcard>
+
   <VSnackbar
     v-model="showSnackbar"
     :color="snackbarColor"
@@ -865,10 +658,6 @@ function useNumericField(targetObject, propertyName, maxDecimals = 2) {
       }
     }
   }
-}
-
-.text-micro {
-  font-size: 0.65rem !important; /* Aproximadamente 10.4px */
 }
 
 .text-column {

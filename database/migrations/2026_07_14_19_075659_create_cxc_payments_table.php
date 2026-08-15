@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('document', 20)->nullable();
             $table->string('customer_name', 255)->nullable();
             $table->decimal('value_cxc', 20, 2)->nullable();
+            $table->decimal('payments_others', 20, 2)->nullable();
             $table->decimal('customer_balances', 20, 2)->nullable();
             $table->string('observations', 255)->nullable();
             $table->integer('check_number')->nullable();

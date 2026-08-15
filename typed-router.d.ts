@@ -457,6 +457,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'recibosdecaja-prueba': RouteRecordInfo<
+      'recibosdecaja-prueba',
+      '/recibosdecaja/prueba',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'recibosdecaja-vdialogs-consultar-rec-caja-dialog': RouteRecordInfo<
       'recibosdecaja-vdialogs-consultar-rec-caja-dialog',
       '/recibosdecaja/vdialogs/ConsultarRecCajaDialog',
@@ -909,6 +916,12 @@ declare module 'vue-router/auto-routes' {
     'resources/ts/pages/recibosdecaja/cuadredecaja.vue': {
       routes:
         | 'recibosdecaja-cuadredecaja'
+      views:
+        | never
+    }
+    'resources/ts/pages/recibosdecaja/prueba.vue': {
+      routes:
+        | 'recibosdecaja-prueba'
       views:
         | never
     }
