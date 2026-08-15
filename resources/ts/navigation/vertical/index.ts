@@ -115,13 +115,23 @@ const menu_super: NavItem_Saas[] = [
     roles: ['admin', 'operador'],
     children: [
       { title: 'Facturacíon de Productos', to: { name: 'facturas' }, icon: { icon: 'tabler-file-invoice', size: 18 }, roles: ['admin'] },
-      { title: 'Consultar Facturación', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+
+      // { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', to: { name: 'recibosdecaja' }, icon: { icon: 'tabler-cash', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Consultar CxC', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
       { title: 'Egresos', to: { name: 'egresos' }, icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Consultar CxP', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
       { title: 'Mvtos de Inventarios', to: { name: 'inventories' }, icon: { icon: 'tabler-basket-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+
+    ],
+  },
+  {
+    title: 'Consultas',
+    icon: { icon: 'tabler-report-search' },
+    roles: ['admin', 'operador'],
+    children: [
+      { title: 'Cuadre de Caja', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-brand-cashapp', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
+      { title: 'Facturación Diaria', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+      { title: 'Cuentas por Cobrar', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
+      { title: 'Cuentas por Pagar', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
 
     ],
   },
@@ -176,13 +186,23 @@ const menu_ope: NavItem_Saas[] = [
     roles: ['admin', 'operador'],
     children: [
       { title: 'Facturacíon de Productos', to: { name: 'facturas' }, icon: { icon: 'tabler-file-invoice', size: 18 }, roles: ['admin'] },
-      { title: 'Consultar Facturación', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+
+      // { title: 'Nota Crédito', icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', to: { name: 'recibosdecaja' }, icon: { icon: 'tabler-cash', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Consultar CxC', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
       { title: 'Egresos', to: { name: 'egresos' }, icon: { icon: 'tabler-eye-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
-      { title: 'Consultar CxP', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
       { title: 'Mvtos de Inventarios', to: { name: 'inventories' }, icon: { icon: 'tabler-basket-dollar', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+
+    ],
+  },
+  {
+    title: 'Consultas',
+    icon: { icon: 'tabler-report-search' },
+    roles: ['admin', 'operador'],
+    children: [
+      { title: 'Cuadre de Caja', to: { name: 'recibosdecaja-cuadredecaja' }, icon: { icon: 'tabler-brand-cashapp', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
+      { title: 'Facturación Diaria', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
+      { title: 'Cuentas por Cobrar', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
+      { title: 'Cuentas por Pagar', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
 
     ],
   },

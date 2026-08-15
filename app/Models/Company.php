@@ -35,6 +35,7 @@ class Company extends Model
         'city',
         'date_from',
         'date_to',
+        'opening_balance'
     ];
 
     // 🔗 Relación: una empresa tiene muchos usuarios

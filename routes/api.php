@@ -159,6 +159,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/customerpayment', [CxcPaymentController::class, 'store']);
     Route::post('/save-invoice-cxc', [CxcPaymentController::class, 'SaveInvoiceCxc']);
     Route::delete('/delete-invoice-cxc/{id}', [CxcPaymentController::class, 'DeleteInvoiceCxc']);
+    Route::post('/cash-reconciliation', [CxcPaymentController::class, 'CashReconciliation']);
 });
 
 Route::post('/dian/recibir-token', [DianController::class, 'recibirToken']);

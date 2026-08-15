@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\ControlConsecutive;
 use App\Models\Customer;
 use App\Models\CxcPayment;
+use App\Models\CxpPayment;
 use App\Models\DetailCxcPayment;
 use App\Models\GeneralDocument;
 use App\Models\MiscellaneousItem;
@@ -84,7 +86,7 @@ class CxcPaymentController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
+        //dd($request->all());
         $companies_id       = $request->input('company_id');
         $tipodcto           = $request->input('document');
         $nit                = $request->input('nit');
@@ -600,6 +602,88 @@ class CxcPaymentController extends Controller
             'success' => true,
             'message' => 'Factura CXC eliminada exitosamente.',
         ], 201, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function CashReconciliation(Request $request)
+    {
+        $companies_id   = $request->input('company_id');
+        $fechadesde     = $request->input('fechadesde');
+        $fechahasta     = $request->input('fechahasta');
+
+        $company        = Company::where('id', $companies_id)->first();
+        $saldoinicial   = (float) ($company->opening_balance ?? 0);
+
+        // 1. Obtener Ventas (Ingresos)
+        $ventas = SalesInvoice::select('date_issue as report_date', 'document_name', 'number', 'prefix', 'client_name as name')
+            ->selectRaw("0.00 as saldoinicial, total_sale as ingresos, 0.00 as pagos, 0.00 as saldoactual, 
+                    CASE WHEN payment_methods_id = 10 THEN 'SI' ELSE 'NO' END as calculo")
+            ->withCasts([
+                'saldoinicial' => 'float',
+                'ingresos'     => 'float',
+                'pagos'        => 'float',
+                'saldoactual'  => 'float',
+            ])
+            ->where('date_issue', $fechahasta)
+            ->where('type', 'Contado')
+            ->where('state', 'Activo')
+            ->orderBy('number')
+            ->orderBy('prefix')
+            ->get();
+
+        // 2. Obtener Pagos/Egresos
+        $pagos = CxpPayment::select('report_date', 'm.name as document_name', 'cxp_payments.consecutive as number')
+            ->selectRaw("' ' as prefix, supplier_name as name")
+            ->selectRaw("0.00 as saldoinicial, 0.00 as ingresos, (others_payments + value_cxp) as pagos, 0.00 as saldoactual, 
+                    CASE WHEN n.type = 'Pagos en Efectivo' THEN 'SI' ELSE 'NO' END as calculo")
+            ->withCasts([
+                'saldoinicial' => 'float',
+                'ingresos'     => 'float',
+                'pagos'        => 'float',
+                'saldoactual'  => 'float',
+            ])
+            ->leftJoin('general_documents as m', function ($join) use ($companies_id) {
+                $join->on('m.code', '=', 'cxp_payments.document')
+                    ->where('typedocument3', 'Egresos')
+                    ->where('m.companies_id', $companies_id);
+            })
+            ->leftJoin('source_payments as n', function ($join) use ($companies_id) {
+                $join->on('n.code', '=', 'cxp_payments.payment_method')
+                    ->where('n.companies_id', $companies_id);
+            })
+            ->where('report_date', $fechahasta)
+            ->where('cxp_payments.state', 'Activo')
+            ->orderBy('number')
+            ->orderBy('prefix')
+            ->get();
+
+        // 3. Unir ambas colecciones en una sola
+        $movimientos = $ventas->concat($pagos);
+
+        // (Opcional) Si deseas ordenarlos por número o fecha de forma consecutiva:
+        // $movimientos = $movimientos->sortBy('number')->values();
+
+        // 4. Recorrer la colección unificada y calcular saldos en cascada
+        $saldo = $saldoinicial;
+
+        foreach ($movimientos as $mov) {
+            $mov->saldoinicial = $saldo;
+
+            if ($mov->calculo === 'SI') {
+                $saldo += $mov->ingresos; // Suma si es venta/ingreso
+                $saldo -= $mov->pagos;    // Resta si es egreso/pago
+            }
+
+            $mov->saldoactual = $saldo;
+        }
+
+        // 5. Retornar la respuesta con la lista de movimientos unificada
+        return response()->json([
+            'openingbalance' => $saldoinicial,
+            'saldoactual'    => $saldo,
+            'movements'    => $movimientos,
+            'success'        => true,
+            'message'        => 'Consulta Generada Exitosamente.',
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 }
 

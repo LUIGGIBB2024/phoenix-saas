@@ -84,6 +84,7 @@ const newCompany = ref<Company>({
   date_from: (hoy),
   date_to: (hoy),
   days_difference: 0,
+  opening_balanc: 0,
 })
 
 watch(archivos, files => {
@@ -142,6 +143,7 @@ watch(showDialog, isOpen => {
       date_from: hoy,
       date_to: hoy,
       days_difference: 0,
+      opening_balanc: 0,
     }
   }
 })
@@ -260,6 +262,7 @@ const openEditDialog = company => {
     date_from: company.date_from,
     date_to: company.date_to,
     days_difference: 0,
+    opening_balance: company.opening_balance,
   }
 
   // ✅ Verificar que el valor llega
@@ -291,6 +294,7 @@ const openCreateDialog = () => {
     date_from: (hoy),
     date_to: (hoy),
     days_difference: 0,
+    opening_balance: 0,
   }
 
   // console.log('🆕 Abriendo modal para nueva empresa')
@@ -980,7 +984,7 @@ const certificateDisplayName = computed(() => {
 
             <VCol
               cols="12"
-              md="6"
+              md="3"
               class="py-0"
             >
               <AppTextField
@@ -993,6 +997,28 @@ const certificateDisplayName = computed(() => {
                 <template #prepend-inner>
                   <VIcon
                     icon="tabler-qrcode"
+                    color="primary"
+                    size="22"
+                    class="me-2"
+                  />
+                </template>
+              </AppTextField>
+            </VCol>
+            <VCol
+              cols="12"
+              md="3"
+              class="py-0"
+            >
+              <AppTextField
+                v-model="newCompany.opening_balance"
+                label="Saldo Inicial (Caja)"
+                placeholder="Ingrese Saldo Inicial - Caja"
+                class="mb-3 text-area-lg"
+                density="comfortable"
+              >
+                <template #prepend-inner>
+                  <VIcon
+                    icon="tabler-coin"
                     color="primary"
                     size="22"
                     class="me-2"
@@ -1116,6 +1142,7 @@ const certificateDisplayName = computed(() => {
   font-size: 0.85em;
   line-height: 1.3;         /* mejora legibilidad */
   overflow-wrap: break-word;
+
   // max-width: 600px;         /* ancho fijo */
   white-space: normal !important; /* permite salto de línea */
   word-wrap: break-word;    /* divide palabras largas */
@@ -1201,6 +1228,7 @@ textarea {
   // min-height: 56px!important;
   margin-block-start: 0 !important;
   padding-block-start: 0 !important;
+
   // width: 20em !important;
   white-space: normal !important; /* permite salto de línea */
 }

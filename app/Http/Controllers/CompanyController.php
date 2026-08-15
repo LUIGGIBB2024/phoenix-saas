@@ -27,7 +27,7 @@ class CompanyController extends Controller
         //'name','nit','dv','email','address','phone','token','technicalkey','endpoint1', 'endpoint2', 'city', 'date_from', 'date_to'
 
         $fechahoy = now()->format('y-m-d');
-        $query = Company::select('id', 'nit', 'dv', 'representativeid', 'name', 'email', 'address', 'phone', 'token', 'technicalkey', 'endpoint1', 'endpoint2', 'endpoint3', 'certificatename', 'certificatekey', 'city', 'date_from', 'date_to', 'dian_email')
+        $query = Company::select('id', 'nit', 'dv', 'representativeid', 'name', 'email', 'address', 'phone', 'token', 'technicalkey', 'endpoint1', 'endpoint2', 'endpoint3', 'certificatename', 'certificatekey', 'city', 'date_from', 'date_to', 'dian_email', 'opening_balance')
             ->selectRaw('DATEDIFF(?, date_to) AS days_difference', [$fechahoy])
             ->get();
         //$q =  Str::upper($request->q);      
@@ -37,7 +37,7 @@ class CompanyController extends Controller
             return response()->json([
                 'data q 000' => $q,
             ]);
-            $query = Company::select('id', 'nit', 'dv', 'representativeid', 'name', 'email', 'address', 'phone', 'token', 'technicalkey', 'endpoint1', 'endpoint2', 'city', 'date_from', 'date_to', 'dian_email')
+            $query = Company::select('id', 'nit', 'dv', 'representativeid', 'name', 'email', 'address', 'phone', 'token', 'technicalkey', 'endpoint1', 'endpoint2', 'city', 'date_from', 'date_to', 'dian_email', 'opening_balance')
                 ->selectRaw('DATEDIFF(?, date_to) AS days_difference', [$fechahoy])
                 ->where('name', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%")
@@ -64,34 +64,6 @@ class CompanyController extends Controller
         // ]);
     }
 
-    public function store1(Request $request)
-    {
-
-        $data = $request->validate([
-            'nit' => 'required|string|max:20',
-            'dv' => 'nullable|string|max:1',
-            'representativeid' => 'nullable|string|max:20',
-            'name' => 'required|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'dian_email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'city' => 'nullable|string|max:100',
-            'endpoint1' => 'nullable|string|max:255',
-            'endpoint2' => 'nullable|string|max:255',
-            'endpoint3' => 'nullable|string|max:255',
-            'token' => 'nullable|string|max:255',
-            'certificatename' => 'nullable|string|max:255',
-            'certificatekey' => 'nullable|string|max:255',
-            'certificate_file' => 'nullable|file|mimes:pfx,p12,pem,crt,cer|max:2048',
-            'date_from' => 'nullable',
-            'date_to' => 'nullable',
-        ]);
-
-        $company = \App\Models\Company::create($data);
-        return response()->json(['message' => 'Empresa creada exitosamente', 'company' => $company]);
-    }
-
     public function store(Request $request)
     {
         Log::info('ENTRANDO A STORE', ['method' => $request->method()]);
@@ -113,6 +85,7 @@ class CompanyController extends Controller
             'certificatekey'  => 'nullable|string|max:255',
             'date_from'       => 'nullable',
             'date_to'         => 'nullable',
+            'opening_balance'  => 'nullable',
             'certificate_file' => 'nullable|file|mimes:pfx,p12,pem,crt,cer|max:2048',
         ]);
 
@@ -176,6 +149,7 @@ class CompanyController extends Controller
             'token'            => 'nullable|string|max:255',
             'date_from'        => 'nullable',
             'date_to'          => 'nullable',
+            'opening_balance'   => 'nullable',
         ]);
 
         if ($request->hasFile('certificate_file')) {

@@ -23,6 +23,7 @@ export interface Company {
   certificatename: string | File
   certificatekey: string
   days_difference: number
+  opening_balance: number
 }
 
 // Interfaz para parámetros de búsqueda o paginación

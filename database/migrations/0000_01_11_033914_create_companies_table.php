@@ -45,6 +45,7 @@ return new class extends Migration
             $table->string('imap_password', 250)->nullable();
             $table->string('imap_encryption', 250)->nullable();
             $table->string('imap_port', 250)->nullable();
+            $table->decimal('opening_balance', 20, 2)->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->string('usercreate', 20)->nullable()->default('System');

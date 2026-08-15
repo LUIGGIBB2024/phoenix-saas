@@ -655,8 +655,14 @@ function seleccionarClientePorDefecto(): void {
 // )
 
 const productosDisponibles = computed(() =>
-  products.value.filter(p => aNumero(p.quantity) > 0),
+  products.value.filter(p => aNumero(p.quantity) !== 0),
 )
+
+// const productosDisponibles = computed(() =>
+//   products.value.filter(p => aNumero(p.quantity) > 0),
+// )
+
+// Descontamos el saldo de inventario en el arreglo local (simulación)
 
 // Descontamos el saldo de inventario en el arreglo local (simulación)
 const producto = products.value.find(p => p.id === productoSeleccionado.value!.id)
