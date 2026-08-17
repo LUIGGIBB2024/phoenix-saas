@@ -59,7 +59,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/companies/{id}', [CompanyController::class, 'destroy']);
 
     // Rutas para Usuarios
-
     Route::get('/users', [UserController::class, 'getUsers']);
     Route::get('/users/saas', [UserController::class, 'getUsersSaas']);
     Route::post('/users', [UserController::class, 'store']);
