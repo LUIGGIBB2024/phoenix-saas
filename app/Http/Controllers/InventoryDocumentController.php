@@ -520,4 +520,93 @@ class InventoryDocumentController extends Controller
 
         ], 201, [], JSON_UNESCAPED_UNICODE);
     }
+
+    public function ConsultDocuments(Request $request): JsonResponse
+    {
+        $companies_id       = $request->input('company_id');
+        $process_year       = $request->input('process_year');
+        $fechadesde         = $request->input('fechadesde');
+        $fechahasta         = $request->input('fechahasta');
+        $products           = Product::orderBy('name', 'ASC')->get();
+        $proveedores        = Supplier::where('companies_id', $companies_id)->get();
+        $compras            = GeneralDocument::where('typedocument2', 'Compras')->where('companies_id', $companies_id)->get();
+        $entradas_salidas   = GeneralDocument::whereIn('typedocument2', ['Entradas', 'Salidas'])->where('companies_id', $companies_id)->get();
+        $dctos_cxp          = GeneralDocument::where('typedocument3', 'Causaciones')->where('companies_id', $companies_id)->get();
+        $cptos_compras      = InventoryConcept::where('documents', 'Compras')->where('companies_id', $companies_id)->get();
+        $cptos_es           = InventoryConcept::whereIn('documents', ['Otras Entradas', 'Otras Salidas'])->where('companies_id', $companies_id)->get();
+        $query = InventoryDocument::select(
+            'inventory_documents.id',
+            'nit',
+            'branch',
+            'inventory_documents.name',
+            'number',
+            'concept_inv',
+            'concept_class',
+            //'report_date',
+            'purchase_invoice',
+            'prefix',
+            'documento_purchase',
+            //'date_from',
+            //'date_to',
+            'subtotal',
+            'vatvalue',
+            'reteiva',
+            'reteica',
+            'products_discount',
+            'additional_discounts',
+            'additional_value',
+            'freight',
+            'total_purchases',
+            'plate',
+            'inventory_documents.type',
+            'type_of_purchase',
+            'inventory_documents.state',
+            'inventory_documents.state01',
+            'inventory_documents.state02',
+            'inventory_documents.state03',
+            'inventory_documents.companies_id',
+            'proyect',
+            'sproyect',
+            'center',
+            'activity'
+        )
+            // Usamos un alias 'm' para solucionar el problema del guion medio y escribir menos código
+            // Forzamos el formato YYYY-MM-DD para las fechas
+            ->selectRaw("DATE_FORMAT(inventory_documents.report_date, '%Y-%m-%d') as report_date")
+            ->selectRaw("DATE_FORMAT(inventory_documents.date_from, '%Y-%m-%d') as date_from")
+            ->selectRaw("DATE_FORMAT(inventory_documents.date_to, '%Y-%m-%d') as date_to")
+
+            ->selectRaw('TRIM(m.name) as concept_name, (inventory_documents.retefuente + inventory_documents.reteiva + inventory_documents.reteica) as retenciones')
+            ->selectRaw(' (inventory_documents.products_discount + inventory_documents.additional_discounts) as descuentos')
+            ->leftJoin('inventory_concepts as m', function ($join) use ($companies_id) {
+                $join->on('m.code', '=', 'inventory_documents.concept_inv')
+                    ->where('m.companies_id', $companies_id);
+            })
+            ->withCasts([
+                'subtotal'      => 'float',
+                'descuentos'    => 'float',
+                'retenciones'   => 'float',
+                'vatvalue'      => 'float',
+                'total_purchases' => 'float',
+            ])
+            ->where('inventory_documents.companies_id', $companies_id)
+            ->where('inventory_documents.report_date', '>=', $fechadesde)
+            ->where('inventory_documents.report_date', '<=', $fechahasta)
+            ->orderBy('inventory_documents.report_date')
+            ->get();
+
+        $documents = $query;
+
+        return response()->json([
+            'documents'         => $documents,
+            'docspurchases'     => $compras,
+            'docsinputsoutputs' => $entradas_salidas,
+            'suppliers'         => $proveedores,
+            'cptpurchases'      => $cptos_compras,
+            'cptes'             => $cptos_es,
+            'dctoscxp'          => $dctos_cxp,
+            'products'          => $products,
+            'totaldocument'     => $documents->count(),
+        ]);
+    }
 }

@@ -440,7 +440,7 @@ class CxpPaymentController extends Controller
             'listbalances'    => $listado,
             'totales'  => $totales,
             'paymentcpt' => $cptospagos,
-        ], 201);
+        ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 
     public function getPaymentsDetailCxp(Request $request): JsonResponse
@@ -614,7 +614,7 @@ class CxpPaymentController extends Controller
             'listbalances'    => $listado,
             'totales'         => $totales,
             'totaldocumentos' => $listado->count(),
-        ], 200);
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
     public function GetSuppliersInvoice(Request $request): JsonResponse
@@ -707,6 +707,75 @@ class CxpPaymentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Factura CXP eliminada exitosamente.',
+        ], 201, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function ConsultPaymentsCxp(Request $request): JsonResponse
+    {
+        $companies_id       = $request->input('company_id');
+        $proveedores        = Supplier::where('companies_id', $companies_id)->get();
+        $fechadesde         = $request->input('fechadesde');
+        $fechahasta         = $request->input('fechahasta');
+
+        $sources            = SourcePayment::where('companies_id', $companies_id)->get();
+        $egresos            = GeneralDocument::where('typedocument3', 'Egresos')->where('typedocument4', 'Factura Crédito')->where('companies_id', $companies_id)->get();
+        $egresos2           = GeneralDocument::where('typedocument3', 'Egresos')->where('typedocument4', 'No Aplica')->where('companies_id', $companies_id)->get();
+        $tiposgastos        = MiscellaneousItem::where('miscellaneous_id', 32)->orderBy('name')->get();
+
+        $payments = CxpPayment::select(
+            'cxp_payments.id',
+            'nit',
+            'branch',
+            'lapse',
+            'report_date',
+            'check_date',
+            'delivery_date',
+            'cxp_payments.consecutive',
+            'document',
+            'supplier_name',
+            'value_cxp',
+            'others_payments',
+            'observations',
+            'payment_method',
+            'check_number',
+            'payment_type',
+            'cxp_payments.state',
+            'state01',
+            'state02',
+            'state03',
+            'proyect',
+            'sproyect',
+            'center',
+            'activity',
+            'suppliers_id',
+            'cxp_payments.companies_id',
+        )
+            ->selectRaw("DATE_FORMAT(cxp_payments.report_date, '%Y-%m-%d') as report_date")
+            ->selectRaw("m.name as document_name, n.name as origin_name")
+            ->leftJoin('general_documents as m', function ($join) use ($companies_id) {
+                $join->on('m.code', '=', 'cxp_payments.document')
+                    ->where('typedocument3', 'Egresos')
+                    ->where('m.companies_id', $companies_id);
+            })
+            ->leftJoin('source_payments as n', function ($join) use ($companies_id) {
+                $join->on('n.code', '=', 'cxp_payments.payment_method')
+                    ->where('n.companies_id', $companies_id);
+            })
+            ->orderBy('cxp_payments.report_date')
+            ->where('cxp_payments.companies_id', $companies_id)
+            ->where('cxp_payments.report_date', '>=', $fechadesde)
+            ->where('cxp_payments.report_date', '<=', $fechahasta)
+            ->get();
+
+        return response()->json([
+            'message' => 'Consulta Generada Exitosamente',
+            'payments' => $payments,
+            'suppliers' => $proveedores,
+            'sources' => $sources,
+            'otherexpenses' => $tiposgastos,
+            'docspayments' => $egresos,
+            'docspaymentsothers' => $egresos2,
+            'totaldocumentos' => $payments->count(),
         ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 }

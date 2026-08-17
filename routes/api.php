@@ -134,11 +134,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/facturas', [SalesInvoiceController::class, 'store']);
     Route::post('/facturas-consultas', [SalesInvoiceController::class, 'getSalesInvoices']);
     Route::post('/facturas-detalle/{id}', [SalesInvoiceController::class, 'getDetSalesInvoices']);
+    Route::post('/monthly-statistics', [SalesInvoiceController::class, 'MonthlyStatistics']);
 
     Route::get('/getdocuments', [InventoryDocumentController::class, 'getDocuments']);
     Route::post('/purchases', [InventoryDocumentController::class, 'store']);
     Route::post('/purchases-details', [InventoryDocumentController::class, 'storedetails']);
     Route::post('/documents-details', [InventoryDocumentController::class, 'getDetDocuments']);
+    Route::post('/consult-documents', [InventoryDocumentController::class, 'ConsultDocuments']);
 
     Route::get('/getsupplierpayments', [CxpPaymentController::class, 'getPayments']);
     Route::post('/supplierpayment', [CxpPaymentController::class, 'store']);
@@ -147,6 +149,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/getpayments-detail-cxp', [CxpPaymentController::class, 'getPaymentsDetailCxp']);
     Route::post('/getpayments-detail-othr-cxp', [CxpPaymentController::class, 'getPaymentsDetailothrCxp']);
     Route::post('/consult-balances-cxp', [CxpPaymentController::class, 'ConsultBalancesCxp']);
+    Route::post('/consult-payments-cxp', [CxpPaymentController::class, 'ConsultPaymentsCxp']);
     Route::post('/get-suppliers-invoice', [CxpPaymentController::class, 'GetSuppliersInvoice']);
     Route::post('/save-invoice-cxp', [CxpPaymentController::class, 'SaveInvoiceCxp']);
     Route::delete('/delete-invoice-cxp/{id}', [CxpPaymentController::class, 'DeleteInvoiceCxp']);
@@ -155,6 +158,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/list-balances-cxc', [CxcPaymentController::class, 'ListBalancesCxc']);
     Route::post('/getpayments-detail-cxc', [CxcPaymentController::class, 'getPaymentsDetailCxc']);
     Route::post('/consult-balances-cxc', [CxcPaymentController::class, 'ConsultBalancesCxc']);
+    Route::post('/consult-payments-cxc', [CxcPaymentController::class, 'ConsultPaymentsCxc']);
     Route::post('/get-customers-invoice', [CxcPaymentController::class, 'GetCustomersInvoice']);
     Route::post('/customerpayment', [CxcPaymentController::class, 'store']);
     Route::post('/save-invoice-cxc', [CxcPaymentController::class, 'SaveInvoiceCxc']);

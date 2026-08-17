@@ -887,13 +887,6 @@ const ShowDetailPaymentDialog = async (item: any, paymenttype: string) => {
   catch (error) {
     console.error(error)
   }
-
-  // finally {
-  //   loading.value = false
-  // }
-
-  // editMode.value = true
-  // showDialog.value = true
 }
 </script>
 

@@ -132,7 +132,9 @@ const menu_super: NavItem_Saas[] = [
       { title: 'Facturación Diaria', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Cuentas por Cobrar', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
       { title: 'Cuentas por Pagar', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
-
+      { title: 'Egresos', to: { name: 'egresos-consultaregresos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'warning' }, roles: ['admin', 'operador'] },
+      { title: 'Recibos de Caja', to: { name: 'recibosdecaja-consultarrecibos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
+      { title: 'Mvtos de Inventarios', to: { name: 'inventories-consultarmovimientos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
     ],
   },
   {
@@ -203,7 +205,10 @@ const menu_ope: NavItem_Saas[] = [
       { title: 'Facturación Diaria', to: { name: 'facturas-consultas' }, icon: { icon: 'tabler-topology-star-ring-3', size: 18, color: 'error' }, roles: ['admin', 'operador'] },
       { title: 'Cuentas por Cobrar', to: { name: 'recibosdecaja-consultarcxc' }, icon: { icon: 'tabler-receipt-2', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
       { title: 'Cuentas por Pagar', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
-
+      { title: 'Egresos', to: { name: 'egresos-consultaregresos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'warning' }, roles: ['admin', 'operador'] },
+      { title: 'Recibos de Caja', to: { name: 'recibosdecaja-consultarrecibos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
+      { title: 'Mvtos de Inventarios', to: { name: 'inventories-consultarmovimientos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
+      { title: 'Ventas Mensuales', to: { name: 'facturas-estadisticasmensuales' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
     ],
   },
 

@@ -96,7 +96,7 @@ class CxcPaymentController extends Controller
         $clienteID          = $clientes->id;
         $tipo_recibo        = $request->input('tipo');
         $items              = $request['detpagos'];
-        $valor_pago_recibo = 0;
+        $valor_pago_recibo  = $request['value_cxc'];
         ////////////////////////////////////////////////////
         if ($tipo_recibo == 'OTROSP') {
             $valor_pago_recibo = collect($items)->sum('payment_amount');
@@ -178,7 +178,7 @@ class CxcPaymentController extends Controller
             $validated['value_cxc'] = $valor_pago_recibo;
 
             if ($tipo_recibo == 'OTROSP') {
-                $validated['value_cxc'] = $valor_pago_recibo;
+                $validated['payments_others'] = $valor_pago_recibo;
             }
 
 
@@ -826,7 +826,71 @@ class CxcPaymentController extends Controller
 
         return ($acumulado1 + $acumulado2 + $acumulado3);
     }
+
+
+    public function ConsultPaymentsCxc(Request $request): JsonResponse
+    {
+        $companies_id       = $request->input('company_id');
+        $customers          = Customer::where('companies_id', $companies_id)->get();
+        $fechadesde         = $request->input('fechadesde');
+        $fechahasta         = $request->input('fechahasta');
+
+        //$sources            = SourcePayment::where('companies_id', $companies_id)->get();
+        $recibos            = GeneralDocument::where('typedocument1', 'Recibos')->where('typedocument4', 'Factura Crédito')->where('companies_id', $companies_id)->get();
+        $recibos2           = GeneralDocument::where('typedocument1', 'Recibos')->where('typedocument4', 'No Aplica')->where('companies_id', $companies_id)->get();
+        //$tiposgastos        = MiscellaneousItem::where('miscellaneous_id', 32)->orderBy('name')->get();
+
+        $payments = CxcPayment::select(
+            'cxc_payments.id',
+            'cxc_payments.nit',
+            'cxc_payments.branch',
+            'lapse',
+            'cxc_payments.report_date',
+            'cxc_payments.consecutive',
+            'cxc_payments.document',
+            'customer_name',
+            'value_cxc',
+            'customer_balances',
+            'observations',
+            'check_number',
+            'payment_type',
+            'cxc_payments.state',
+            'cxc_payments.state01',
+            'cxc_payments.state02',
+            'cxc_payments.state03',
+            'cxc_payments.proyect',
+            'cxc_payments.sproyect',
+            'cxc_payments.center',
+            'cxc_payments.activity',
+            'cxc_payments.customers_id',
+            'cxc_payments.companies_id',
+        )
+            ->selectRaw("DATE_FORMAT(cxc_payments.report_date, '%Y-%m-%d') as report_date")
+            ->selectRaw("m.name as document_name, n.name as customers_name2")
+            ->leftJoin('general_documents as m', function ($join) use ($companies_id) {
+                $join->on('m.code', '=', 'cxc_payments.document')
+                    ->where('typedocument1', 'Recibos')
+                    ->where('m.companies_id', $companies_id);
+            })
+            ->leftJoin('customers as n', function ($join) use ($companies_id) {
+                $join->on('n.nit', '=', 'cxc_payments.nit')
+                    ->on('n.branch', '=', 'cxc_payments.branch')
+                    ->where('n.companies_id', $companies_id);
+            })
+            ->orderBy('cxc_payments.report_date')
+            ->where('cxc_payments.companies_id', $companies_id)
+            ->where('cxc_payments.report_date', '>=', $fechadesde)
+            ->where('cxc_payments.report_date', '<=', $fechahasta)
+            ->get();
+
+
+        return response()->json([
+            'message' => 'Consulta de Recibos Generada Exitosamente',
+            'payments' => $payments,
+            'customers' => $customers,
+            'docspayments' => $recibos,
+            'docspaymentsothers' => $recibos2,
+            'totaldocumentos' => $payments->count(),
+        ], 201);
+    }
 }
-
-
-//getCustomerPayments

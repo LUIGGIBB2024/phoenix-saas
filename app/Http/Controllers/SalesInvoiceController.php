@@ -19,6 +19,7 @@ use App\Models\TypeDocumentIdentification;
 use App\Models\TypeLiability;
 use App\Models\TypeRegime;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -520,5 +521,56 @@ class SalesInvoiceController extends Controller
             ],
             Response::HTTP_ACCEPTED
         );
+    }
+
+    public function MonthlyStatistics(Request $request): JsonResponse
+    {
+        $process_year = $request->input('process_year');
+        $companies_id = $request->input('company_id');
+
+        $consolidated = SalesInvoice::select(
+            DB::raw('CAST(MONTH(date_issue) AS SIGNED) as month_number'),
+            DB::raw('CAST(SUM(cost_of_sale) AS DOUBLE) as cost_of_sale'),
+            DB::raw('CAST(SUM(total_sale) AS DOUBLE) as total'),
+        )
+            ->groupBy('month_number')
+            ->orderBy('month_number')
+            ->whereYear('date_issue', $process_year)
+            ->where('companies_id', $companies_id)
+            ->where('state', 'Activo')
+            ->get()
+            ->keyBy('month_number');
+
+        $result = collect(range(1, 12))->map(function ($monthNumber) use ($consolidated) {
+            $monthName = Carbon::create()
+                ->month($monthNumber)
+                ->locale('es')
+                ->translatedFormat('F');
+
+            $record     = $consolidated->get($monthNumber);
+            $total      = $record ? $record->total : 0.00;
+            $costOfSale = $record ? $record->cost_of_sale : 0.00;
+            $diff       = $total - $costOfSale;
+            $percentage = $total > 0 ? round(($diff / $total)  * 100, 2) : 0.00;
+
+            return [
+                'month_number'      => $monthNumber,
+                'month_name'        => ucfirst($monthName),
+                'total'             => $record ? $record->total : 0.00,
+                'cost_of_sale'      => $record ? $record->cost_of_sale : 0.00,
+                'absolute_diference' => $diff,
+                'percentage' => $percentage,
+            ];
+        });
+
+
+
+        //dd($result);
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Consoldiado generado exitosamente.',
+            'data'      => $result,
+        ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 }
