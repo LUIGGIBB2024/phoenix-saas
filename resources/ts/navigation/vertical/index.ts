@@ -134,7 +134,8 @@ const menu_super: NavItem_Saas[] = [
       { title: 'Cuentas por Pagar', to: { name: 'egresos-consultarcxp' }, icon: { icon: 'tabler-cash-register', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
       { title: 'Egresos', to: { name: 'egresos-consultaregresos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'warning' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', to: { name: 'recibosdecaja-consultarrecibos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
-      { title: 'Mvtos de Inventarios', to: { name: 'inventories-consultarmovimientos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
+      { title: 'Mvtos de Inventarios', to: { name: 'inventories-consultarmovimientos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
+      { title: 'Ventas Mensuales', to: { name: 'facturas-estadisticasmensuales' }, icon: { icon: 'tabler-report-money', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
     ],
   },
   {
@@ -208,7 +209,7 @@ const menu_ope: NavItem_Saas[] = [
       { title: 'Egresos', to: { name: 'egresos-consultaregresos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'warning' }, roles: ['admin', 'operador'] },
       { title: 'Recibos de Caja', to: { name: 'recibosdecaja-consultarrecibos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
       { title: 'Mvtos de Inventarios', to: { name: 'inventories-consultarmovimientos' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
-      { title: 'Ventas Mensuales', to: { name: 'facturas-estadisticasmensuales' }, icon: { icon: 'tabler-calendar-dollar', size: 18, color: 'primary' }, roles: ['admin', 'operador'] },
+      { title: 'Ventas Mensuales', to: { name: 'facturas-estadisticasmensuales' }, icon: { icon: 'tabler-report-money', size: 18, color: 'success' }, roles: ['admin', 'operador'] },
     ],
   },
 

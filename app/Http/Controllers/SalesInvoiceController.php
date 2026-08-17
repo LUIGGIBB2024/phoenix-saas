@@ -563,7 +563,21 @@ class SalesInvoiceController extends Controller
             ];
         });
 
+        $totalSum       = $result->sum('total');
+        $costOfSaleSum  = $result->sum('cost_of_sale');
+        $diffSum        = $totalSum - $costOfSaleSum;
+        $percentageSum  = $costOfSaleSum > 0 ? round(($diffSum / $costOfSaleSum) * 100, 2) : 0.00;
 
+        $result->push(
+            [
+                'month_number'          => 13,
+                'month_name'            => 'Totales',
+                'total'                 => $totalSum,
+                'cost_of_sale'          => $costOfSaleSum,
+                'absolute_diference'    => $diffSum,
+                'percentage'            => $percentageSum,
+            ]
+        );
 
         //dd($result);
 
