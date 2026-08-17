@@ -255,27 +255,36 @@ const chartOptions = ref({
     toolbar: { show: true },
   },
   stroke: {
-    width: [0, 0, 3], // 0 para Ventas (barra), 0 para Costos (barra), 3 para Margen (línea)
+    width: [0, 0, 3], // 0 para Ventas, 0 para Costos, 3 para la línea de Margen
     curve: 'smooth',
   },
   plotOptions: {
-    bar: { columnWidth: '50%' },
+    bar: {
+      columnWidth: '50%',
+    },
   },
-  colors: ['#2e7d32', '#c62828', '#0288d1'],
+  colors: ['#2e7d32', '#F51414', '#0288d1'],
   xaxis: {
     categories: [],
   },
   yaxis: [
     {
-      // Eje Izquierdo: Monto en $ (compartido por Ventas y Costos)
+      // Eje 0: Vinculado a Ventas Totales (Izquierdo - Monto $)
+      seriesName: 'Ventas Totales',
       title: { text: 'Monto ($)' },
       labels: {
         formatter: val => (val !== undefined && val !== null ? `$${Number(val).toLocaleString()}` : '$0'),
       },
     },
     {
-      // Eje Derecho: Porcentaje % (para Margen)
+      // Eje 1: Vinculado a Costos de Venta (Comparte escala con Ventas, por eso show: false)
+      seriesName: 'Costo de Ventas',
+      show: false,
+    },
+    {
+      // Eje 2: Vinculado a Margen % (Derecho - Porcentaje %)
       opposite: true,
+      seriesName: 'Margen %',
       title: { text: 'Margen (%)' },
       min: 0,
       max: 100,
@@ -303,9 +312,6 @@ const chartOptions = ref({
 const fetchData = async () => {
   loading.value = true
   try {
-    // DIAGNÓSTICO: Revisa qué estructura está llegando en la consola
-    console.log('recordData actual:', recordData.value)
-
     const rows = recordData.value?.data || recordData.value || []
 
     if (!Array.isArray(rows) || rows.length === 0) {
@@ -315,14 +321,18 @@ const fetchData = async () => {
       return
     }
 
-    const months = rows.map(item => item.month_name || `Mes ${item.month || ''}`)
-    const totals = rows.map(item => Number(item.total) || 0)
-    const costs = rows.map(item => Number(item.cost_of_sale) || 0)
-    const margins = rows.map(item => Number(item.percentage) || 0)
+    // 1. Filtrar las filas del año (meses <= 12)
+    const filteredRows = rows.filter(item => Number(item.month_number) <= 12)
+
+    // 2. Mapear los arreglos
+    const months = filteredRows.map(item => item.month_name || `Mes ${item.month_number || ''}`)
+    const totals = filteredRows.map(item => Number(item.total) || 0)
+    const costs = filteredRows.map(item => Number(item.cost_of_sale) || 0)
+    const margins = filteredRows.map(item => Number(item.percentage) || 0)
 
     console.log('Datos Mapeados:', { months, totals, costs, margins })
 
-    // Actualizar datos
+    // 3. Asignar las series con yaxisIndex obligatorio para gráficos multi-eje
     series.value = [
       { name: 'Ventas Totales', type: 'column', data: totals },
       { name: 'Costo de Ventas', type: 'column', data: costs },
@@ -491,6 +501,7 @@ const generarConsulta = async () => {
                 {{ formatCurrency(Number(item.percentage, 2)) }} %
               </div>
             </template>
+            <template #bottom />
           </VDataTable>
         </div>
       </VCard>
@@ -502,7 +513,7 @@ const generarConsulta = async () => {
     >
       <VCard class="pa-4">
         <VCardTitle class="d-flex justify-space-between align-center">
-          <span>Consolidado de Ventas vs. Costos (Año {{ proccessYear }})</span>
+          <span style="color: blue;">Consolidado de Ventas vs. Costos (Año {{ proccessYear }})</span>
           <VBtn
             color="primary"
             icon="mdi-refresh"
