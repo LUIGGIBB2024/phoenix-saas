@@ -108,6 +108,7 @@ const headers = [
 
 // --- 🔹 Modal y formulario de creación ---
 const showDialog = ref(false)
+const showDialogProcess = ref(false)
 const editMode = ref(false) // 👈 false = crear, true = editar
 
 const newRecord = ref<InventoryBalance>({
@@ -408,6 +409,10 @@ const openEditDialog = _infoData => {
 // console.log('certificatename:', newProduct.value.certificatename)
 
 // 🔹 Abrir modal en modo creación
+const openProcessDialog = () => {
+  showDialogProcess.value = true
+}
+
 const openCreateDialog = () => {
   editMode.value = false
   newRecord.value = {
@@ -449,6 +454,39 @@ const confirmDelete = (id: number) => {
   recordToDelete.value = id
   nameRecordToDelete.value = infoData.value.find(c => c.id === id)?.name || ''
   showConfirmDialog.value = true
+}
+
+// 🔹 Eliminar empresa
+const processBalances = async () => {
+  try {
+    await $api('/api/process-balances', {
+      method: 'POST',
+      params: {
+        company_id: localStorage.getItem('company_id'),
+        process_year: localStorage.getItem('process_year'),
+      },
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+    })
+    loadInfo()
+    snackbarMessage.value = '✅ Proceso Generado Exitosamente'
+    snackbarColor.value = 'success'
+  }
+  catch (error) {
+    console.error('❌ Error al Proceso de Actualización de Saldos', error)
+    snackbarMessage.value = '❌ Error al Proceso de Actualización de Saldos'
+    snackbarColor.value = 'error'
+  }
+  finally {
+    showDialogProcess.value = false
+
+    // recordToDelete.value = null
+
+    showSnackbar.value = false
+    nextTick(() => (showSnackbar.value = true))
+  }
 }
 
 // 🔹 Eliminar empresa
@@ -661,23 +699,22 @@ const previousField = useNumericField(newRecord, 'previous_balance')
         md="2"
         class="d-flex align-right justify-start mt-md-5 mt-2"
       >
-        <!--
-          <VBtn
+        <VBtn
           rounded="pill"
-          color="primary"
+          color="success"
           variant="flat"
           block
-          @click="openCreateDialog"
-          >
+          :disabled="tipodeusuario === 'Operador'"
+          @click="openProcessDialog"
+        >
           <template #prepend>
-          <VIcon
-          icon="tabler-plus"
-          size="20"
-          />
+            <VIcon
+              icon="tabler-automation"
+              size="20"
+            />
           </template>
-          Ingresar Saldos
-          </VBtn>
-        -->
+          Actualizar Saldos
+        </VBtn>
       </VCol>
     </VRow>
   </VCard>
@@ -1386,7 +1423,7 @@ const previousField = useNumericField(newRecord, 'previous_balance')
     </VCard>
   </VDialog>
 
-  <!-- ❗ Diálogo de confirmación de eliminación -->
+  <!-- ❗ Diálogo Para Procesa Saldos -->
   <VDialog
     v-model="showConfirmDialog"
     max-width="400px"
@@ -1395,7 +1432,7 @@ const previousField = useNumericField(newRecord, 'previous_balance')
       <VCardTitle class="text-h6 text-center pt-4">
         <VIcon
           icon="tabler-alert-circle"
-          color="warning"
+          color="error"
           size="26"
           class="me-2"
         />
@@ -1420,6 +1457,44 @@ const previousField = useNumericField(newRecord, 'previous_balance')
           @click="deleteRecord"
         >
           Eliminar
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
+  <VDialog
+    v-model="showDialogProcess"
+    max-width="400px"
+  >
+    <VCard>
+      <VCardTitle class="text-h6 text-center pt-4">
+        <VIcon
+          icon="tabler-alert-circle"
+          color="warning"
+          size="26"
+          class="me-2"
+        />
+        Actualización de Saldos de Inventarios <br>
+        Año {{ process_year }}
+      </VCardTitle>
+      <VCardText class="text-center">
+        ¿Está seguro de Actualizar la Información de Inventarios de Productos ?<br>
+        <strong>Esta acción no se puede deshacer.</strong>
+      </VCardText>
+      <VCardActions class="justify-center pb-4">
+        <VBtn
+          color="secondary"
+          variant="tonal"
+          @click="showDialogProcess = false"
+        >
+          Cancelar
+        </VBtn>
+        <VBtn
+          color="error"
+          variant="flat"
+          @click="processBalances"
+        >
+          Procesar
         </VBtn>
       </VCardActions>
     </VCard>

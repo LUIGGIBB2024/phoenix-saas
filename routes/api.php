@@ -127,6 +127,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/balances', [InventoryBalanceController::class, 'store']);
     Route::post('/balances/{id}', [InventoryBalanceController::class, 'update']);
     Route::delete('/balances/{id}', [InventoryBalanceController::class, 'destroy']);
+    Route::post('/process-balances', [InventoryBalanceController::class, 'ProcessBalances']);
 
     Route::get('/getinfo', [SalesInvoiceController::class, 'getInfo']);
     Route::post('/facturas', [SalesInvoiceController::class, 'store']);
