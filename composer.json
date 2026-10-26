@@ -9,14 +9,14 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "guzzlehttp/guzzle": "7.8.2",
+        "php": "^8.3.2",
+        "guzzlehttp/guzzle": "^7.8.3",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.9",
         "roach-php/laravel": "^3.2",
         "symfony/css-selector": "7.0",
-        "symfony/dom-crawler": "7.0",
+        "symfony/dom-crawler": "^7.3",
         "spatie/browsershot": "^5.2",
         "predis/predis": "^3.5"
     },
@@ -61,23 +61,38 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"...\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite"
-        ],
-        "extra": {
-            "laravel": {
-                "dont-discover": []
-            }
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         },
-        "config": {
-            "optimize-autoloader": true,
-            "preferred-install": "dist",
-            "sort-packages": true,
-            "allow-plugins": {
-                "pestphp/pest-plugin": true,
-                "php-http/discovery": true
+        "audit": {
+            "block-insecure": false,
+            "ignore": {
+                "PKSA-b41t-wbzk-9q51": "Actualización temporal Laravel 11",
+                "PKSA-d5tc-s1qs-h781": "Actualización temporal Laravel 11",
+                "PKSA-m5cs-t1y6-qpcs": "Actualización temporal Laravel 11",
+                "PKSA-3r5d-mb8f-1qw9": "Actualización temporal Laravel 11",
+                "PKSA-mdq4-51ck-6kdq": "Actualización temporal Laravel 11",
+                "PKSA-8qx3-n5y5-vvnd": "Actualización temporal Laravel 11",
+                "PKSA-q46n-4fdk-zjr4": "Actualización temporal Laravel 11",
+                "PKSA-qzrn-rnz3-85w1": "Actualización temporal Laravel 11",
+                "PKSA-4hy6-m98j-dz9f": "Actualización temporal Laravel 11",
+                "PKSA-w7xr-vk7n-rstm": "Actualización temporal Laravel 11"
             }
-        },
-        "minimum-stability": "stable",
-        "prefer-stable": true
-    }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
