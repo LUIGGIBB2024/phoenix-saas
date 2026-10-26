@@ -320,9 +320,10 @@ class InventoryDocumentController extends Controller
                 $CostoPromedio = 0;
 
                 if (trim($cptodet->documents) == 'Compras' || trim($cptodet->documents) == 'Otras Entradas') {
+                    $divisor = ($saldos->quantity + $quantity) != 0 ? ($saldos->quantity + $quantity) : 1; // Evitar división por cero
                     $CostoActual    = $saldos->quantity * $saldos->cost;
                     $CostoDcto      = $quantity *  $cost;
-                    $CostoPromedio  = ($CostoActual +  $CostoDcto) / ($saldos->quantity + $quantity);
+                    $CostoPromedio  = ($CostoActual +  $CostoDcto) / $divisor;
                     $saldos->lastcost = $saldos->cost;
                     $saldos->quantity += $quantity;
                     $saldos->cost   = $CostoPromedio;
