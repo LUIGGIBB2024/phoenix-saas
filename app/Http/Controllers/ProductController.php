@@ -157,9 +157,10 @@ class ProductController extends Controller
         }
     }
 
+
     public function updatelist(Request $request)
     {
-        //dd($request);
+      
         $companyId      = $request->company_id;
         $product        = $request->code;
         $codlista       = "01";
@@ -301,7 +302,7 @@ class ProductController extends Controller
 
     public function getProductsMovements(Request $request): JsonResponse
     {
-        
+
         $companies_id = $request->input('company_id');
         $codigoproducto = $request['product']['code'];
         $details = InventoryMovement::select(

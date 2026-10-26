@@ -183,7 +183,9 @@ class InventoryBalanceController extends Controller
             ->whereYear('inventory_movements.report_date', $process_year)
             ->get();
 
+
         // 2. Actualizar la tabla InventoryBalance de forma segura y optimizada
+        // 2. Actualizar la tabla InventoryBalance de forma segura y optimizada xxxxxxxxxxxxxxx
         DB::transaction(function () use ($process_year, $ConsolidateMovements, $companies_id) {
 
             InventoryBalance::where('year', $process_year)
