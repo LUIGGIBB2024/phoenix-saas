@@ -161,6 +161,8 @@ class InventoryBalanceController extends Controller
         }
     }
 
+    
+
     public function ProcessBalances(Request $request)
     {
         $companies_id = $request->input('company_id');
