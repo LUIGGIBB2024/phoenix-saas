@@ -258,6 +258,7 @@ class InventoryBalanceController extends Controller
                     ->where('companies_id', $companies_id)
                     ->first();
 
+                // Proceso para cálculo del Costo Promedio         
                 // Proceso para cálculo del Costo Promedio                
 
                 $divisor = ($saldos->quantity + $quantity) != 0 ? ($saldos->quantity + $quantity) : 1; // Evitar división por cero

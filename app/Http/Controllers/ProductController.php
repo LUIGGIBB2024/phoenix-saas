@@ -298,8 +298,10 @@ class ProductController extends Controller
         return response()->json(['message' => 'Producto Eliminado Exitosamente']);
     }
 
+
     public function getProductsMovements(Request $request): JsonResponse
     {
+        
         $companies_id = $request->input('company_id');
         $codigoproducto = $request['product']['code'];
         $details = InventoryMovement::select(
