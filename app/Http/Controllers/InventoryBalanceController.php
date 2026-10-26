@@ -162,12 +162,12 @@ class InventoryBalanceController extends Controller
     }
 
     
-
     public function ProcessBalances(Request $request)
     {
         $companies_id = $request->input('company_id');
         $process_year = $request->input('process_year');
 
+        // 1. Consolidar los movimientos de inventario
         // 1. Consolidar los movimientos de inventario
         $ConsolidateMovements = InventoryMovement::select('inventory_movements.code', 'inventory_movements.name', 'inventory_movements.store')
             ->selectRaw('
