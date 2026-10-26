@@ -165,4 +165,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/cash-reconciliation', [CxcPaymentController::class, 'CashReconciliation']);
 });
 
+
 Route::post('/dian/recibir-token', [DianController::class, 'recibirToken']);
